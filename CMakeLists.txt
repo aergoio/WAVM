@@ -4,7 +4,7 @@ project (WAVM C CXX ASM)
 
 # WAVM configuration options
 
-option(WAVM_ENABLE_STATIC_LINKING "use static linking instead of dynamic for the WAVM libraries" OFF)
+option(WAVM_ENABLE_STATIC_LINKING "use static linking instead of dynamic for the WAVM libraries" ON)
 option(WAVM_ENABLE_RELEASE_ASSERTS "enable assertions in release builds" 0)
 option(WAVM_METRICS_OUTPUT "controls printing the timings of some operations to stdout" OFF)
 option(WAVM_ENABLE_LTO "use link-time optimization" OFF)
@@ -224,7 +224,11 @@ function(WAVM_ADD_LIBRARY TARGET_NAME)
 		endif()
 	endif()
 	
-	set_target_properties(${TARGET_NAME} PROPERTIES FOLDER Libraries)
+	set_target_properties(${TARGET_NAME} PROPERTIES 
+        FOLDER Libraries
+    	ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${WAVM_SOURCE_DIR}/../../lib
+    	ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${WAVM_SOURCE_DIR}/../../lib
+    	ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO ${WAVM_SOURCE_DIR}/../../lib)
 endfunction()
 
 function(WAVM_ADD_EXECUTABLE TARGET_NAME FOLDER_NAME)
@@ -238,7 +242,7 @@ function(WAVM_ADD_INSTALLED_EXECUTABLE TARGET_NAME FOLDER_NAME)
 	WAVM_INSTALL_TARGET(${TARGET_NAME})
 endfunction()
 
-add_subdirectory(Examples)
+#add_subdirectory(Examples)
 add_subdirectory(Include/WAVM/Inline)
 add_subdirectory(Lib/IR)
 add_subdirectory(Lib/Logging)
@@ -247,21 +251,23 @@ add_subdirectory(Lib/Platform)
 add_subdirectory(Lib/RegExp)
 add_subdirectory(Lib/WASM)
 add_subdirectory(Lib/WASTParse)
-add_subdirectory(Lib/WASTPrint)
-add_subdirectory(Programs/wavm-as)
-add_subdirectory(Programs/wavm-disas)
-add_subdirectory(Test)
-add_subdirectory(ThirdParty/dtoa)
-
+#add_subdirectory(Lib/WASTPrint)
+#add_subdirectory(Programs/wavm-as)
+#add_subdirectory(Programs/wavm-disas)
+#add_subdirectory(Test)
+#add_subdirectory(ThirdParty/dtoa)
+#
 if(WAVM_ENABLE_RUNTIME)
 	add_subdirectory(Lib/Emscripten)
 	add_subdirectory(Lib/LLVMJIT)
 	add_subdirectory(Lib/Runtime)
 	add_subdirectory(Lib/ThreadTest)
-	add_subdirectory(Programs/wavm-compile)
+#	add_subdirectory(Programs/wavm-compile)
 	add_subdirectory(Programs/wavm-run)
 	add_subdirectory(ThirdParty/libunwind)
+    add_subdirectory(Lib/ASCL)
 endif()
+
 
 # Create a CMake package in <build>/lib/cmake/WAVM containing the WAVM library targets.
 export(

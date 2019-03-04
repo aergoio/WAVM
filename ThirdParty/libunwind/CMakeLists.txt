@@ -62,4 +62,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	target_compile_options(WAVMUnwind PRIVATE "-Wno-unused-but-set-variable")
 endif()
 
-set_target_properties(WAVMUnwind PROPERTIES FOLDER "Third party")
+set_target_properties(WAVMUnwind PROPERTIES FOLDER "Third party"
+    ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${WAVM_SOURCE_DIR}/../../lib
+    ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${WAVM_SOURCE_DIR}/../../lib
+    ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO ${WAVM_SOURCE_DIR}/../../lib
+)
