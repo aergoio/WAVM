@@ -93,14 +93,25 @@ static U32 heapAlloc(Memory* memory, U32 numBytes)
 	return allocationAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "_heap$alloc", U32, _heapAlloc, U32 numBytes)
+DEFINE_INTRINSIC_FUNCTION(system, "malloc", U32, _malloc, U32 numBytes)
 {
     wavmAssert(asclMemory);
 
     return coerce32bitAddress(asclMemory, heapAlloc(asclMemory, numBytes));
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "_concat", U32, _concat,
+DEFINE_INTRINSIC_FUNCTION(system, "memcpy", void, _memcpy,
+                          U32 destAddress, U32 srcAddress, U32 numBytes)
+{
+    wavmAssert(asclMemory);
+
+    U8* srcMemory = getMemoryBaseAddress(asclMemory) + srcAddress;
+    U8* destMemory = getMemoryBaseAddress(asclMemory) + destAddress;
+
+    memcpy(destMemory, srcMemory, numBytes);
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "concat", U32, _concat,
 						  U32 stringAddress1, U32 stringAddress2)
 {
     wavmAssert(asclMemory);
