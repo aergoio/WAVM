@@ -3,7 +3,7 @@ set(PublicHeaders ${WAVM_INCLUDE_DIR}/ASCL/ASCLVM.h)
 
 WAVM_ADD_LIBRARY(ASCLVM ${Sources} ${PublicHeaders})
 
-target_link_libraries(ASCLVM Runtime WASTParse WASM RegExp NFA Logging Platform)
+target_link_libraries(ASCLVM Runtime WASTParse WASM RegExp NFA Logging Platform dl)
 
 file(INSTALL ${WAVM_INCLUDE_DIR}
 	 DESTINATION ${WAVM_SOURCE_DIR}/../../include
