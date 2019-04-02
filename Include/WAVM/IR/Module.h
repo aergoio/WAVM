@@ -69,7 +69,8 @@ namespace WAVM { namespace IR {
 			// comparison can't distinguish when NaNs are identical.
 			case Type::f32_const: return a.i32 == b.i32;
 			case Type::f64_const: return a.i64 == b.i64;
-			case Type::v128_const: return a.v128 == b.v128;
+			case Type::v128_const:
+				return a.v128.u64[0] == b.v128.u64[0] && a.v128.u64[1] == b.v128.u64[1];
 			case Type::global_get: return a.ref == b.ref;
 			case Type::ref_null: return true;
 			case Type::ref_func: return a.ref == b.ref;
@@ -153,14 +154,52 @@ namespace WAVM { namespace IR {
 		std::vector<U8> data;
 	};
 
-	// An elem segment: a literal sequence of function indices that is copied into a Runtime::Table
-	// when instantiating a module
+	// An elem: a literal reference used to initialize a table element.
+	struct Elem
+	{
+		enum class Type
+		{
+			// These must match the corresponding Opcode members.
+			ref_null = 0xd0,
+			ref_func = 0xd2
+		};
+		union
+		{
+			Type type;
+			Opcode typeOpcode;
+		};
+		Uptr index;
+
+		friend bool operator==(const Elem& a, const Elem& b)
+		{
+			if(a.type != b.type) { return false; }
+			switch(a.type)
+			{
+			case Elem::Type::ref_func: return a.index == b.index;
+			default: return true;
+			}
+		}
+
+		friend bool operator!=(const Elem& a, const Elem& b)
+		{
+			if(a.type != b.type) { return true; }
+			switch(a.type)
+			{
+			case Elem::Type::ref_func: return a.index != b.index;
+			default: return false;
+			}
+		}
+	};
+
+	// An elem segment: a literal sequence of elems that is copied into a Runtime::Table when
+	// instantiating a module
 	struct ElemSegment
 	{
 		bool isActive;
 		Uptr tableIndex;
 		InitializerExpression baseOffset;
-		std::vector<Uptr> indices;
+		ReferenceType elemType;
+		std::vector<Elem> elems;
 	};
 
 	// A user-defined module section as an array of bytes
@@ -274,6 +313,8 @@ namespace WAVM { namespace IR {
 		std::vector<std::string> tables;
 		std::vector<std::string> memories;
 		std::vector<std::string> globals;
+		std::vector<std::string> elemSegments;
+		std::vector<std::string> dataSegments;
 		std::vector<std::string> exceptionTypes;
 	};
 

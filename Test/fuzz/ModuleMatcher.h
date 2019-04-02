@@ -43,7 +43,7 @@ namespace WAVM {
 				if(segment.isActive
 				   && (segment.tableIndex != wastSegment.tableIndex
 					   || segment.baseOffset != wastSegment.baseOffset
-					   || segment.indices != wastSegment.indices))
+					   || segment.elems != wastSegment.elems))
 				{ failVerification(); }
 			}
 		}
@@ -51,6 +51,9 @@ namespace WAVM {
 	private:
 		const Module& aModule;
 		const Module& bModule;
+
+		const FunctionDef* aFunction = nullptr;
+		const FunctionDef* bFunction = nullptr;
 
 		[[noreturn]] void failVerification()
 		{
@@ -92,7 +95,8 @@ namespace WAVM {
 		void verifyMatches(BranchTableImm a, BranchTableImm b)
 		{
 			if(a.defaultTargetDepth != b.defaultTargetDepth
-			   || a.branchTableIndex != b.branchTableIndex)
+			   || aFunction->branchTables[a.branchTableIndex]
+					  != bFunction->branchTables[b.branchTableIndex])
 			{ failVerification(); }
 		}
 
@@ -179,10 +183,11 @@ namespace WAVM {
 
 		void verifyMatches(const FunctionDef& a, const FunctionDef& b)
 		{
+			aFunction = &a;
+			bFunction = &b;
+
 			verifyMatches(a.type, b.type);
-			if(a.branchTables != b.branchTables
-			   || a.nonParameterLocalTypes != b.nonParameterLocalTypes)
-			{ failVerification(); }
+			if(a.nonParameterLocalTypes != b.nonParameterLocalTypes) { failVerification(); }
 
 			if(a.code.size() != b.code.size()) { failVerification(); }
 
@@ -225,6 +230,9 @@ namespace WAVM {
 			}
 			wavmAssert(aNextByte == aEnd);
 			wavmAssert(bNextByte == bEnd);
+
+			aFunction = nullptr;
+			bFunction = nullptr;
 		}
 
 		void verifyMatches(const TableType& a, const TableType& b)

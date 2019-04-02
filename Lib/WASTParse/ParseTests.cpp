@@ -12,8 +12,10 @@
 #include "WAVM/IR/Validate.h"
 #include "WAVM/IR/Value.h"
 #include "WAVM/Inline/BasicTypes.h"
+#include "WAVM/Inline/Lock.h"
 #include "WAVM/Inline/Serialization.h"
 #include "WAVM/Platform/Diagnostics.h"
+#include "WAVM/Platform/Mutex.h"
 #include "WAVM/Runtime/RuntimeData.h"
 #include "WAVM/WASM/WASM.h"
 #include "WAVM/WASTParse/TestScript.h"
@@ -25,7 +27,9 @@ using namespace WAVM::WAST;
 
 static Runtime::Function* makeHostRef(Uptr index)
 {
+	static Platform::Mutex indexToHostRefMapMutex;
 	static HashMap<Uptr, Runtime::Function*> indexToHostRefMap;
+	Lock<Platform::Mutex> lock(indexToHostRefMapMutex);
 	Runtime::Function*& function = indexToHostRefMap.getOrAdd(index, nullptr);
 	if(!function)
 	{
@@ -178,8 +182,13 @@ static void parseTestScriptModule(CursorState* cursor,
 	}
 	else
 	{
-		outQuotedModuleType = QuotedModuleType::none;
+		const U32 startCharOffset = cursor->nextToken->begin;
 		parseModuleBody(cursor, outModule);
+		const U32 endCharOffset = cursor->nextToken->begin;
+
+		outQuotedModuleType = QuotedModuleType::text;
+		outQuotedModuleString = std::string(cursor->parseState->string + startCharOffset,
+											cursor->parseState->string + endCharOffset);
 	}
 }
 
@@ -327,10 +336,6 @@ static Command* parseCommand(CursorState* cursor, const IR::FeatureSpec& feature
 				ExpectedTrapType expectedType;
 				if(!strcmp(expectedErrorMessage.c_str(), "out of bounds memory access"))
 				{ expectedType = ExpectedTrapType::outOfBoundsMemoryAccess; }
-				else if(!strcmp(expectedErrorMessage.c_str(), "out of bounds"))
-				{
-					expectedType = ExpectedTrapType::outOfBoundsTableAccess;
-				}
 				else if(stringStartsWith(expectedErrorMessage.c_str(),
 										 "out of bounds data segment access"))
 				{
@@ -340,6 +345,10 @@ static Command* parseCommand(CursorState* cursor, const IR::FeatureSpec& feature
 										 "out of bounds elem segment access"))
 				{
 					expectedType = ExpectedTrapType::outOfBoundsElemSegmentAccess;
+				}
+				else if(stringStartsWith(expectedErrorMessage.c_str(), "out of bounds"))
+				{
+					expectedType = ExpectedTrapType::outOfBounds;
 				}
 				else if(!strcmp(expectedErrorMessage.c_str(), "call stack exhausted"))
 				{
@@ -378,6 +387,14 @@ static Command* parseCommand(CursorState* cursor, const IR::FeatureSpec& feature
 					expectedType = ExpectedTrapType::uninitializedTableElement;
 				}
 				else if(stringStartsWith(expectedErrorMessage.c_str(), "invalid argument"))
+				{
+					expectedType = ExpectedTrapType::invalidArgument;
+				}
+				else if(!strcmp(expectedErrorMessage.c_str(), "element segment dropped"))
+				{
+					expectedType = ExpectedTrapType::invalidArgument;
+				}
+				else if(!strcmp(expectedErrorMessage.c_str(), "data segment dropped"))
 				{
 					expectedType = ExpectedTrapType::invalidArgument;
 				}

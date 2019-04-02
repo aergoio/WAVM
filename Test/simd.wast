@@ -239,13 +239,13 @@
 ;; v8x16.shuffle
 
 (module
-  (func (export "v8x16.shuffle/0123456789abcdef") (param $a v128) (param $b v128) (result v128) (v8x16.shuffle ( 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15) (local.get $a) (local.get $b)))
-  (func (export "v8x16.shuffle/ghijklmnopqrstuv") (param $a v128) (param $b v128) (result v128) (v8x16.shuffle (16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31) (local.get $a) (local.get $b)))
-  (func (export "v8x16.shuffle/vutsrqponmlkjihg") (param $a v128) (param $b v128) (result v128) (v8x16.shuffle (31 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16) (local.get $a) (local.get $b)))
-  (func (export "v8x16.shuffle/fedcba9876543210") (param $a v128) (param $b v128) (result v128) (v8x16.shuffle (15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0) (local.get $a) (local.get $b)))
-  (func (export "v8x16.shuffle/0000000000000000") (param $a v128) (param $b v128) (result v128) (v8x16.shuffle ( 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0) (local.get $a) (local.get $b)))
-  (func (export "v8x16.shuffle/gggggggggggggggg") (param $a v128) (param $b v128) (result v128) (v8x16.shuffle (16 16 16 16 16 16 16 16 16 16 16 16 16 16 16 16) (local.get $a) (local.get $b)))
-  (func (export "v8x16.shuffle/00000000gggggggg") (param $a v128) (param $b v128) (result v128) (v8x16.shuffle ( 0  0  0  0  0  0  0  0 16 16 16 16 16 16 16 16) (local.get $a) (local.get $b)))
+  (func (export "v8x16.shuffle/0123456789abcdef") (param $a v128) (param $b v128) (result v128) (v8x16.shuffle  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 (local.get $a) (local.get $b)))
+  (func (export "v8x16.shuffle/ghijklmnopqrstuv") (param $a v128) (param $b v128) (result v128) (v8x16.shuffle 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 (local.get $a) (local.get $b)))
+  (func (export "v8x16.shuffle/vutsrqponmlkjihg") (param $a v128) (param $b v128) (result v128) (v8x16.shuffle 31 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16 (local.get $a) (local.get $b)))
+  (func (export "v8x16.shuffle/fedcba9876543210") (param $a v128) (param $b v128) (result v128) (v8x16.shuffle 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0 (local.get $a) (local.get $b)))
+  (func (export "v8x16.shuffle/0000000000000000") (param $a v128) (param $b v128) (result v128) (v8x16.shuffle  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0 (local.get $a) (local.get $b)))
+  (func (export "v8x16.shuffle/gggggggggggggggg") (param $a v128) (param $b v128) (result v128) (v8x16.shuffle 16 16 16 16 16 16 16 16 16 16 16 16 16 16 16 16 (local.get $a) (local.get $b)))
+  (func (export "v8x16.shuffle/00000000gggggggg") (param $a v128) (param $b v128) (result v128) (v8x16.shuffle  0  0  0  0  0  0  0  0 16 16 16 16 16 16 16 16 (local.get $a) (local.get $b)))
 )
 
 ;; i*.add
@@ -305,23 +305,6 @@
   (func (export "i8x16.sub_saturate_u") (param $a v128) (param $b v128) (result v128) (i8x16.sub_saturate_u (local.get $a) (local.get $b)))
   (func (export "i16x8.sub_saturate_s") (param $a v128) (param $b v128) (result v128) (i16x8.sub_saturate_s (local.get $a) (local.get $b)))
   (func (export "i16x8.sub_saturate_u") (param $a v128) (param $b v128) (result v128) (i16x8.sub_saturate_u (local.get $a) (local.get $b)))
-)
-
-;; i*.shl/shr_s/shr_u
-
-(module
-  (func (export "i8x16.shl")   (param $a v128) (param $b v128) (result v128) (i8x16.shl   (local.get $a) (local.get $b)))
-  (func (export "i16x8.shl")   (param $a v128) (param $b v128) (result v128) (i16x8.shl   (local.get $a) (local.get $b)))
-  (func (export "i32x4.shl")   (param $a v128) (param $b v128) (result v128) (i32x4.shl   (local.get $a) (local.get $b)))
-  (func (export "i64x2.shl")   (param $a v128) (param $b v128) (result v128) (i64x2.shl   (local.get $a) (local.get $b)))
-  (func (export "i8x16.shr_s") (param $a v128) (param $b v128) (result v128) (i8x16.shr_s (local.get $a) (local.get $b)))
-  (func (export "i8x16.shr_u") (param $a v128) (param $b v128) (result v128) (i8x16.shr_u (local.get $a) (local.get $b)))
-  (func (export "i16x8.shr_s") (param $a v128) (param $b v128) (result v128) (i16x8.shr_s (local.get $a) (local.get $b)))
-  (func (export "i16x8.shr_u") (param $a v128) (param $b v128) (result v128) (i16x8.shr_u (local.get $a) (local.get $b)))
-  (func (export "i32x4.shr_s") (param $a v128) (param $b v128) (result v128) (i32x4.shr_s (local.get $a) (local.get $b)))
-  (func (export "i32x4.shr_u") (param $a v128) (param $b v128) (result v128) (i32x4.shr_u (local.get $a) (local.get $b)))
-  (func (export "i64x2.shr_s") (param $a v128) (param $b v128) (result v128) (i64x2.shr_s (local.get $a) (local.get $b)))
-  (func (export "i64x2.shr_u") (param $a v128) (param $b v128) (result v128) (i64x2.shr_u (local.get $a) (local.get $b)))
 )
 
 ;; v128.and/or/xor/not
@@ -571,7 +554,7 @@
 								$0 $1 $2 $3
 								$default
 								(i32x4.extract_lane 0 (i32x4.shr_s (local.get $v)
-								                                   (v128.const i32x4 32 32 32 32)))
+								                                   (i32.const 32)))
 							)
 						)
 						(return (i32.const 100))
@@ -608,3 +591,42 @@
 (assert_return (invoke "v128.load align=16" (i32.const 1)) (v128.const i64x2 0 0))
 (assert_return (invoke "v128.store align=16" (i32.const 1) (v128.const i8x16 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)))
 (assert_return (invoke "v128.load align=16" (i32.const 0)) (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))
+
+;; v128.const format
+
+(module (func (result v128) (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15)))
+(module (func (result v128) (v128.const i16x8 0 1 2 3 4 5 6 7)))
+(module (func (result v128) (v128.const i32x4 0 1 2 3)))
+(module (func (result v128) (v128.const i64x2 0 1)))
+(module (func (result v128) (v128.const i64x2 -1 -2)))
+
+(module (func (result v128) (v128.const i32x4 0xa 0xb 0xc 0xd)))
+(module (func (result v128) (v128.const i32x4 0xa 0xb 0xc 0xd)))
+
+(module (func (result v128) (v128.const f32x4 0.0 1.0 2.0 3.0)))
+(module (func (result v128) (v128.const f64x2 0.0 1.0)))
+
+(module (func (result v128) (v128.const f32x4 0 1 2 3)))
+(module (func (result v128) (v128.const f32x4 0 1 2 -0x1.0p+10)))
+
+(assert_invalid
+  (module (func (result v128) (v128.const i32x4 0.0 1.0 2.0 3.0)))
+  "expected i32 literal"
+)
+
+(assert_invalid
+  (module (func (result v128) (v128.const i32 0 1 2 3)))
+  "expected 'i8x6', 'i16x8', 'i32x4', 'i64x2', 'f32x4', or 'f64x2'"
+)
+(assert_invalid
+  (module (func (result v128) (v128.const i16x4 0 1 2 3)))
+  "expected 'i8x6', 'i16x8', 'i32x4', 'i64x2', 'f32x4', or 'f64x2'"
+)
+(assert_invalid
+  (module (func (result v128) (v128.const f32 0 1 2 3)))
+  "expected 'i8x6', 'i16x8', 'i32x4', 'i64x2', 'f32x4', or 'f64x2'"
+)
+(assert_invalid
+  (module (func (result v128) (v128.const 0 1 2 3)))
+  "expected 'i8x6', 'i16x8', 'i32x4', 'i64x2', 'f32x4', or 'f64x2'"
+)

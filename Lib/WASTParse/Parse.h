@@ -60,6 +60,7 @@ namespace WAVM { namespace WAST {
 		Name(const char* inBegin, U32 inNumChars, U32 inSourceOffset)
 		: begin(inBegin), numChars(inNumChars), sourceOffset(inSourceOffset)
 		{
+			wavmAssert(inNumChars > 0);
 		}
 
 		constexpr operator bool() const { return begin != nullptr; }
@@ -78,7 +79,8 @@ namespace WAVM { namespace WAST {
 
 		friend constexpr bool operator==(const Name& a, const Name& b)
 		{
-			return a.numChars == b.numChars && memcmp(a.begin, b.begin, a.numChars) == 0;
+			return a.numChars == b.numChars
+				   && (a.numChars == 0 || memcmp(a.begin, b.begin, a.numChars) == 0);
 		}
 		friend constexpr bool operator!=(const Name& a, const Name& b) { return !(a == b); }
 
@@ -142,6 +144,8 @@ namespace WAVM { namespace WAST {
 		NameToIndexMap memoryNameToIndexMap;
 		NameToIndexMap globalNameToIndexMap;
 		NameToIndexMap exceptionTypeNameToIndexMap;
+		NameToIndexMap elemNameToIndexMap;
+		NameToIndexMap dataNameToIndexMap;
 
 		IR::DisassemblyNames disassemblyNames;
 

@@ -291,9 +291,28 @@ namespace WAVM { namespace IR {
 				serialize(stream, elemSegment.baseOffset);
 			}
 		}
-		serializeArray(stream, elemSegment.indices, [](Stream& stream, Uptr& functionIndex) {
-			serializeVarUInt32(stream, functionIndex);
-		});
+		if(elemSegment.isActive)
+		{
+			serializeArray(stream, elemSegment.elems, [](Stream& stream, Elem& elem) {
+				if(Stream::isInput) { elem.type = Elem::Type::ref_func; }
+				wavmAssert(elem.type == Elem::Type::ref_func);
+				serializeVarUInt32(stream, elem.index);
+			});
+		}
+		else
+		{
+			serialize(stream, elemSegment.elemType);
+			serializeArray(stream, elemSegment.elems, [](Stream& stream, Elem& elem) {
+				serializeOpcode(stream, elem.typeOpcode);
+				switch(elem.type)
+				{
+				case Elem::Type::ref_null: break;
+				case Elem::Type::ref_func: serializeVarUInt32(stream, elem.index); break;
+				default: throw FatalSerializationException("invalid elem opcode");
+				};
+				serializeConstant(stream, "expected end opcode", (U8)Opcode::end);
+			});
+		}
 	}
 
 	template<typename Stream> void serialize(Stream& stream, DataSegment& dataSegment)
@@ -794,7 +813,7 @@ template<typename Stream> void serializeImportSection(Stream& moduleStream, Modu
 	serializeSection(moduleStream, SectionType::import, [&module](Stream& sectionStream) {
 		Uptr size = module.functions.imports.size() + module.tables.imports.size()
 					+ module.memories.imports.size() + module.globals.imports.size()
-					+ module.exceptionTypes.size();
+					+ module.exceptionTypes.imports.size();
 		serializeVarUInt32(sectionStream, size);
 		if(Stream::isInput)
 		{
