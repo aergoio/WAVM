@@ -143,6 +143,108 @@ DEFINE_INTRINSIC_FUNCTION(system, "_println", void, _println,
     std::cout << &memoryRef<U8>(asclMemory, formatAddress) << "\n";
 }
 
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_get_i32", U32, _mpz_get_i32, U32 mpzAddress)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_get_i64", U64, _mpz_get_i64, U32 mpzAddress)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_get_str", U32, _mpz_get_str, U32 mpzAddress)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_set_i32", U32, _mpz_set_i32,
+                          U32 value, U32 isSigned)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_set_i64", U32, _mpz_set_i64, U64 value, U32 isSigned)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_set_str", U32, _mpz_set_str, U32 valueAddress)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_add", U32, _mpz_add,
+                          U32 mpzAddress1, U32 mpzAddress2)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_sub", U32, _mpz_sub,
+                          U32 mpzAddress1, U32 mpzAddress2)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_mul", U32, _mpz_mul,
+                          U32 mpzAddress1, U32 mpzAddress2)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_div", U32, _mpz_div,
+                          U32 mpzAddress1, U32 mpzAddress2)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_mod", U32, _mpz_mod,
+                          U32 mpzAddress1, U32 mpzAddress2)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_and", U32, _mpz_and,
+                          U32 mpzAddress1, U32 mpzAddress2)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_or", U32, _mpz_or,
+                          U32 mpzAddress1, U32 mpzAddress2)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_xor", U32, _mpz_xor,
+                          U32 mpzAddress1, U32 mpzAddress2)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_rshift", U32, _mpz_rshift,
+                          U32 mpzAddress1, U32 bitCnt)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_lshift", U32, _mpz_lshift,
+                          U32 mpzAddress1, U32 bitCnt)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_cmp", U32, _mpz_cmp,
+                          U32 mpzAddress1, U32 mpzAddress2)
+{
+    return 0;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "mpz_neg", U32, _mpz_neg, U32 mpzAddress)
+{
+    return 0;
+}
+
 enum class ioStreamVMHandle
 {
     StdErr = 1,
