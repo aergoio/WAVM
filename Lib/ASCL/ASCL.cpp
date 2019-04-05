@@ -43,8 +43,8 @@ static U32 coerce32bitAddress(Memory* memory, Uptr address)
 
 //  0..62  = static data
 // 63..63  = MutableGlobals
-// 64..128 = aliased stack
-// 129..   = dynamic memory
+// 64..127 = aliased stack
+// 128..   = dynamic memory
 enum
 {
 	minStaticASCLMemoryPages = 128
@@ -63,7 +63,7 @@ struct MutableGlobals
 	I32 _stdout;
 };
 
-DEFINE_INTRINSIC_GLOBAL(system, "STACK_MAX", I32, STACK_MAX, 128 * IR::numBytesPerPage);
+DEFINE_INTRINSIC_GLOBAL(system, "STACK_MAX", I32, STACK_MAX, 127 * IR::numBytesPerPage);
 
 DEFINE_INTRINSIC_GLOBAL(system, "_stderr", I32, _stderr,
 						MutableGlobals::address + offsetof(MutableGlobals, _stderr));
@@ -91,6 +91,14 @@ static U32 heapAlloc(Memory* memory, U32 numBytes)
 	{ growMemory(memory, endPage - getMemoryNumPages(memory) + 1); }
 
 	return allocationAddress;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "_assert", void, _assert, I32 condition, U32 descAddress)
+{
+    if (!condition) {
+		wavmAssert(asclMemory);
+        throwException(ExceptionTypes::assertionFailure, {asObject(asclMemory), U32(descAddress)});
+    }
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "malloc", U32, _malloc, U32 numBytes)

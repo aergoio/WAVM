@@ -149,6 +149,7 @@ namespace WAVM { namespace Runtime {
 	visit(calledUnimplementedIntrinsic);                                                           \
 	visit(outOfMemory);                                                                            \
 	visit(misalignedAtomicMemoryAccess, WAVM::IR::ValueType::i64);                                 \
+	visit(assertionFailure, WAVM::IR::ValueType::anyref, WAVM::IR::ValueType::i32);                \
 	visit(invalidArgument);
 
 	// Information about a runtime exception.
