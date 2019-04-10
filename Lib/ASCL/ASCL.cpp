@@ -93,22 +93,22 @@ static U32 heapAlloc(Memory* memory, U32 numBytes)
 	return allocationAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "_assert", void, _assert, I32 condition, U32 descAddress)
+DEFINE_INTRINSIC_FUNCTION(system, "__assert", void, _assert, I32 condition, U32 descAddress)
 {
     if (!condition) {
 		wavmAssert(asclMemory);
-        throwException(ExceptionTypes::assertionFailure, {asObject(asclMemory), U32(descAddress)});
+        throwException(ExceptionTypes::failedAssertion, {asObject(asclMemory), U32(descAddress)});
     }
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "malloc", U32, _malloc, U32 numBytes)
+DEFINE_INTRINSIC_FUNCTION(system, "__malloc", U32, _malloc, U32 numBytes)
 {
     wavmAssert(asclMemory);
 
     return coerce32bitAddress(asclMemory, heapAlloc(asclMemory, numBytes));
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "memcpy", void, _memcpy,
+DEFINE_INTRINSIC_FUNCTION(system, "__memcpy", void, _memcpy,
                           U32 destAddress, U32 srcAddress, U32 numBytes)
 {
     wavmAssert(asclMemory);
@@ -119,7 +119,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "memcpy", void, _memcpy,
     memcpy(destMemory, srcMemory, numBytes);
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "concat", U32, _concat,
+DEFINE_INTRINSIC_FUNCTION(system, "__concat", U32, _concat,
 						  U32 stringAddress1, U32 stringAddress2)
 {
     wavmAssert(asclMemory);
@@ -129,7 +129,8 @@ DEFINE_INTRINSIC_FUNCTION(system, "concat", U32, _concat,
     U8* stringPointer2 = &memoryRef<U8>(asclMemory, stringAddress2);
     auto stringSize2 = strlen((const char*)stringPointer2);
 
-    U32 destAddress = coerce32bitAddress(asclMemory, heapAlloc(asclMemory, stringSize1 + stringSize2 + 1));
+    U32 destAddress = coerce32bitAddress(asclMemory,
+        heapAlloc(asclMemory, stringSize1 + stringSize2 + 1));
     U8* destMemory = getMemoryBaseAddress(asclMemory) + destAddress;
 
     memcpy(destMemory, stringPointer1, stringSize1);
@@ -139,116 +140,116 @@ DEFINE_INTRINSIC_FUNCTION(system, "concat", U32, _concat,
     return destAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "_print", void, _print,
+DEFINE_INTRINSIC_FUNCTION(system, "__print", void, _print,
 						  U32 formatAddress, I32 argList)
 {
     std::cout << &memoryRef<U8>(asclMemory, formatAddress);
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "_println", void, _println,
+DEFINE_INTRINSIC_FUNCTION(system, "__println", void, _println,
 						  U32 formatAddress, I32 argList)
 {
     std::cout << &memoryRef<U8>(asclMemory, formatAddress) << "\n";
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_get_i32", U32, _mpz_get_i32, U32 mpzAddress)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_get_i32", U32, _mpz_get_i32, U32 mpzAddress)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_get_i64", U64, _mpz_get_i64, U32 mpzAddress)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_get_i64", U64, _mpz_get_i64, U32 mpzAddress)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_get_str", U32, _mpz_get_str, U32 mpzAddress)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_get_str", U32, _mpz_get_str, U32 mpzAddress)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_set_i32", U32, _mpz_set_i32,
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_set_i32", U32, _mpz_set_i32,
                           U32 value, U32 isSigned)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_set_i64", U32, _mpz_set_i64, U64 value, U32 isSigned)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_set_i64", U32, _mpz_set_i64, U64 value, U32 isSigned)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_set_str", U32, _mpz_set_str, U32 valueAddress)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_set_str", U32, _mpz_set_str, U32 valueAddress)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_add", U32, _mpz_add,
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_add", U32, _mpz_add,
                           U32 mpzAddress1, U32 mpzAddress2)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_sub", U32, _mpz_sub,
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_sub", U32, _mpz_sub,
                           U32 mpzAddress1, U32 mpzAddress2)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_mul", U32, _mpz_mul,
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_mul", U32, _mpz_mul,
                           U32 mpzAddress1, U32 mpzAddress2)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_div", U32, _mpz_div,
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_div", U32, _mpz_div,
                           U32 mpzAddress1, U32 mpzAddress2)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_mod", U32, _mpz_mod,
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_mod", U32, _mpz_mod,
                           U32 mpzAddress1, U32 mpzAddress2)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_and", U32, _mpz_and,
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_and", U32, _mpz_and,
                           U32 mpzAddress1, U32 mpzAddress2)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_or", U32, _mpz_or,
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_or", U32, _mpz_or,
                           U32 mpzAddress1, U32 mpzAddress2)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_xor", U32, _mpz_xor,
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_xor", U32, _mpz_xor,
                           U32 mpzAddress1, U32 mpzAddress2)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_rshift", U32, _mpz_rshift,
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_rshift", U32, _mpz_rshift,
                           U32 mpzAddress1, U32 bitCnt)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_lshift", U32, _mpz_lshift,
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_lshift", U32, _mpz_lshift,
                           U32 mpzAddress1, U32 bitCnt)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_cmp", U32, _mpz_cmp,
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_cmp", U32, _mpz_cmp,
                           U32 mpzAddress1, U32 mpzAddress2)
 {
     return 0;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "mpz_neg", U32, _mpz_neg, U32 mpzAddress)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_neg", U32, _mpz_neg, U32 mpzAddress)
 {
     return 0;
 }

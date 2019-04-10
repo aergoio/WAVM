@@ -192,7 +192,7 @@ std::string Runtime::describeException(const Exception* exception)
 		result += std::to_string(exception->arguments[1].u64);
 		result += "])";
 	}
-    else if(exception->type == ExceptionTypes::assertionFailure)
+    else if(exception->type == ExceptionTypes::failedAssertion)
 	{
 		Memory* memory = asMemoryNullable(exception->arguments[0].object);
         std::string desc(reinterpret_cast<const char*>
