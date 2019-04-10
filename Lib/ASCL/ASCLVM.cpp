@@ -275,15 +275,7 @@ static int run(const CommandLineOptions& options)
 	IR::ValueTuple functionResults = invokeFunctionChecked(context, function, invokeArgs);
 	Timing::logTimer("Invoked function", executionTimer);
 
-	if(options.functionName)
-	{
-		Log::printf(Log::debug,
-					"%s returned: %s\n",
-					options.functionName,
-					asString(functionResults).c_str());
-		return EXIT_SUCCESS;
-	}
-	else if(functionResults.size() == 1 && functionResults[0].type == ValueType::i32)
+	if(functionResults.size() == 1 && functionResults[0].type == ValueType::i32)
 	{
 		return functionResults[0].i32;
 	}
