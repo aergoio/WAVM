@@ -140,7 +140,6 @@ DEFINE_INTRINSIC_FUNCTION(system, "__assert", void, _assert, I32 condition, U32 
 DEFINE_INTRINSIC_FUNCTION(system, "__malloc", U32, _malloc, U32 numBytes)
 {
     wavmAssert(asclMemory);
-    throwException(outOfBoundsArrayAccess, {U32(1), U32(2)});
     return coerce32bitAddress(asclMemory, heapAlloc(numBytes));
 }
 
