@@ -195,10 +195,17 @@ std::string Runtime::describeException(const Exception* exception)
     else if(exception->type == ExceptionTypes::failedAssertion)
 	{
 		Memory* memory = asMemoryNullable(exception->arguments[0].object);
-        std::string desc(reinterpret_cast<const char*>
+        std::string cond(reinterpret_cast<const char*>
             (&memoryRef<U8>(memory, exception->arguments[1].u32)));
 		result += '(';
-        result += desc;
+        result += cond;
+        if(exception->arguments[2].u32 > 0)
+        {
+            std::string desc(reinterpret_cast<const char*>
+                (&memoryRef<U8>(memory, exception->arguments[2].u32)));
+		    result += ",";
+            result += desc;
+        }
 		result += ")\n";
 	}
 	else if(exception->type->sig.params.size())
