@@ -290,7 +290,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_get_str", U32, _mpz_get_str, U32 mpzAdd
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_set_i32", U32, _mpz_set_i32,
-                          U32 value, U32 isSigned)
+                          I32 value, U32 isSigned)
 {
     wavmAssert(asclMemory);
 
@@ -305,7 +305,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_set_i32", U32, _mpz_set_i32,
     return mpzAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__mpz_set_i64", U32, _mpz_set_i64, U64 value, U32 isSigned)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_set_i64", U32, _mpz_set_i64, I64 value, U32 isSigned)
 {
     wavmAssert(asclMemory);
 
@@ -444,27 +444,29 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_xor", U32, _mpz_xor,
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_rshift", U32, _mpz_rshift,
-                          U32 mpzAddress, U32 bitCnt)
+                          U32 mpzAddress1, U32 mpzAddress2)
 {
-    mpz_ptr mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress);
+    mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
+    mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
     U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
     mpz_ptr r_mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + resAddress);
 
     mpz_init2(r_mpz, MPZ_MAX_BITS);
-    mpz_tdiv_q_2exp(r_mpz, mpz, bitCnt);
+    mpz_tdiv_q_2exp(r_mpz, mpz1, mpz_get_ui(mpz2));
 
     return resAddress;
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_lshift", U32, _mpz_lshift,
-                          U32 mpzAddress, U32 bitCnt)
+                          U32 mpzAddress1, U32 mpzAddress2)
 {
-    mpz_ptr mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress);
+    mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
+    mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
     U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
     mpz_ptr r_mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + resAddress);
 
     mpz_init2(r_mpz, MPZ_MAX_BITS);
-    mpz_mul_2exp(r_mpz, mpz, bitCnt);
+    mpz_mul_2exp(r_mpz, mpz1, mpz_get_ui(mpz2));
 
     return resAddress;
 }
@@ -481,18 +483,52 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_cmp", U32, _mpz_cmp,
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_neg", U32, _mpz_neg, U32 mpzAddress)
 {
     mpz_ptr mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress);
+    U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
+    mpz_ptr r_mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + resAddress);
 
-    mpz_neg(mpz, mpz);
+    mpz_neg(r_mpz, mpz);
 
-    return mpzAddress;
+    return resAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__array_get_i32", U32, _array_get_i32, U32 arrAddress,
-                          U32 offset)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_sign", I32, _mpz_sign, U32 mpzAddress)
 {
-    // TODO: outOfBoundArrayAccess
+    return mpz_sgn((mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress));
+}
 
-    return 0;
+template<typename T> static U32 array_get(U32 arrayAddress, U32 index)
+{
+    wavmAssert(asclMemory);
+
+    U32* arrayPointer = &memoryRef<U32>(asclMemory, arrayAddress);
+
+    U32 dimension = arrayPointer[0];
+    U32 elemCount = arrayPointer[1];
+
+    if (index >= elemCount)
+        throwException(outOfBoundsArrayAccess, {U32(index), U32(elemCount)});
+
+    if (dimension == 1)
+        return arrayAddress + sizeof(U64) + index * sizeof(T);
+
+    U32 unitSize = 0;
+    for (U32 i = dimension, j = 2; i > 1; i--, j += 2) {
+        unitSize += sizeof(U64) + arrayPointer[j + 1] * sizeof(T);
+    }
+
+    return arrayAddress + sizeof(U64) + (unitSize * index);
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__array_get_i32", U32, _array_get_i32,
+                          U32 arrayAddress, U32 index)
+{
+    return array_get<U32>(arrayAddress, index);
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__array_get_i64", U32, _array_get_i64,
+                          U32 arrayAddress, U32 index)
+{
+    return array_get<U64>(arrayAddress, index);
 }
 
 enum class ioStreamVMHandle

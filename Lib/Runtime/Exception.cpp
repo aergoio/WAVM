@@ -203,7 +203,7 @@ std::string Runtime::describeException(const Exception* exception)
         {
             std::string desc(reinterpret_cast<const char*>
                 (&memoryRef<U8>(memory, exception->arguments[2].u32)));
-		    result += ",";
+		    result += ", ";
             result += desc;
         }
 		result += ")\n";
