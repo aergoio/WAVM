@@ -263,18 +263,23 @@ static void mpzFree(void* ptr, size_t size)
 {
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__mpz_get_i32", U32, _mpz_get_i32, U32 mpzAddress)
+static I64 mpz_get_i(U32 mpzAddress)
 {
     wavmAssert(asclMemory);
 
-    return (I32)mpz_get_si((mpz_srcptr)(getMemoryBaseAddress(asclMemory) + mpzAddress));
+    mpz_ptr mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress);
+
+    return mpz_fits_slong_p(mpz) ? mpz_get_si(mpz) : mpz_get_ui(mpz);
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__mpz_get_i64", U64, _mpz_get_i64, U32 mpzAddress)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_get_i32", I32, _mpz_get_i32, U32 mpzAddress)
 {
-    wavmAssert(asclMemory);
+    return (I32)mpz_get_i(mpzAddress);
+}
 
-    return mpz_get_si((mpz_srcptr)(getMemoryBaseAddress(asclMemory) + mpzAddress));
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_get_i64", I64, _mpz_get_i64, U32 mpzAddress)
+{
+    return mpz_get_i(mpzAddress);
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_get_str", U32, _mpz_get_str, U32 mpzAddress)
@@ -289,33 +294,26 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_get_str", U32, _mpz_get_str, U32 mpzAdd
     return allocationAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__mpz_set_i32", U32, _mpz_set_i32,
-                          I32 value, U32 isSigned)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_set_i32", U32, _mpz_set_i32, I32 value)
 {
     wavmAssert(asclMemory);
 
     U32 mpzAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
     mpz_ptr mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress);
 
-    if (isSigned)
-        mpz_init_set_si(mpz, value);
-    else
-        mpz_init_set_ui(mpz, value);
+    mpz_init_set_si(mpz, value);
 
     return mpzAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__mpz_set_i64", U32, _mpz_set_i64, I64 value, U32 isSigned)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_set_i64", U32, _mpz_set_i64, I64 value)
 {
     wavmAssert(asclMemory);
 
     U32 mpzAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
     mpz_ptr mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress);
 
-    if (isSigned)
-        mpz_init_set_si(mpz, value);
-    else
-        mpz_init_set_ui(mpz, value);
+    mpz_init_set_si(mpz, value);
 
     return mpzAddress;
 }
