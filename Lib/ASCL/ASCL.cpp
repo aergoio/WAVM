@@ -126,31 +126,34 @@ static U32 heapAlloc(U32 numBytes)
 	return allocationAddress;
 }
 
-static void throwFormattedException(const char* format, ...)
+static void throwFormattedException(const char* format, U32 line, U32 column, U32 offset, ...)
 {
     va_list vargs;
     U32 messageAddress = heapAlloc(ERR_DESC_MAX_LEN);
     U8* message = getMemoryBaseAddress(asclMemory) + messageAddress;
 
-    va_start(vargs, format);
+    va_start(vargs, offset);
     vsnprintf((char *)message, ERR_DESC_MAX_LEN, format, vargs);
     va_end(vargs);
 
-    throwException(ExceptionTypes::abortedExecution, {asObject(asclMemory), U32(messageAddress)});
+    throwException(ExceptionTypes::abortedExecution,
+                   {asObject(asclMemory), messageAddress, line, column, offset});
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__assert", void, _assert, I32 condition, U32 condAddress,
-                          U32 descAddress)
+                          U32 descAddress, U32 line, U32 column, U32 offset)
 {
     wavmAssert(asclMemory);
 
     if (!condition) {
         if (descAddress > 0)
             throwFormattedException("assertion failed with condition '%s': %s",
+                                    line, column, offset,
                                     (char *)&memoryRef<U8>(asclMemory, condAddress),
                                     (char *)&memoryRef<U8>(asclMemory, descAddress));
         else
             throwFormattedException("assertion failed with condition '%s'",
+                                    line, column, offset,
                                     (char *)&memoryRef<U8>(asclMemory, condAddress));
     }
 }
@@ -522,7 +525,7 @@ template<typename T> static U32 array_get(U32 arrayAddress, U32 index)
     U32 elemCount = arrayPointer[1];
 
     if (index >= elemCount)
-        throwFormattedException("array index out of bounds");
+        throwFormattedException("array index out of bounds", 1, 1, 0);
 
     if (dimension == 1)
         return arrayAddress + sizeof(U64) + index * sizeof(T);

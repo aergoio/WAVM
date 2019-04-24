@@ -151,6 +151,9 @@ namespace WAVM { namespace Runtime {
 	visit(misalignedAtomicMemoryAccess, WAVM::IR::ValueType::i64);                                 \
 	visit(abortedExecution,                                                                        \
           WAVM::IR::ValueType::anyref,                                                             \
+		  WAVM::IR::ValueType::i32,                                                                \
+		  WAVM::IR::ValueType::i32,                                                                \
+		  WAVM::IR::ValueType::i32,                                                                \
           WAVM::IR::ValueType::i32);                                                               \
 	visit(invalidArgument);
 

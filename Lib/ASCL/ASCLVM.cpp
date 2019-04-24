@@ -22,6 +22,7 @@
 #include "WAVM/Logging/Logging.h"
 #include "WAVM/Runtime/Linker.h"
 #include "WAVM/Runtime/Runtime.h"
+#include "WAVM/Runtime/RuntimeData.h"
 #include "WAVM/WASM/WASM.h"
 
 using namespace WAVM;
@@ -323,12 +324,12 @@ int asclvm_test(const char* asclFile, const char* asclSource, const char* wasmFi
             if (err_fn != NULL) {
                 src_pos_t pos = { (char *)asclFile, (char *)asclSource, 1, 1, 0, 1, 1, 0 };
 
-                /* TODO
                 if (exception->type == ExceptionTypes::abortedExecution) {
-                    pos->first_col = exception->arguments[0].u32;
-                    pos->first_offset = exception->arguments[1].u32;
+                    pos.first_line = exception->arguments[2].i32;
+                    pos.first_col = exception->arguments[3].i32;
+                    pos.first_offset = exception->arguments[4].i32;
                 }
-                */
+
                 err_fn(ERROR_RUNTIME, LVL_ERROR, &pos, describeException(exception).c_str());
             }
             else {
