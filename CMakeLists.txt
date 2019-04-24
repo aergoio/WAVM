@@ -105,16 +105,16 @@ if(MSVC AND WAVM_ENABLE_LTO)
 endif()
 
 # Install Include/WAVM to <install root>/include/WAVM
-install(DIRECTORY ${WAVM_SOURCE_DIR}/Include/WAVM
-		DESTINATION include
-		PATTERN *.txt EXCLUDE
-		PATTERN *.h.in EXCLUDE)
+file(INSTALL ${WAVM_SOURCE_DIR}/Include/WAVM
+     DESTINATION ${WAVM_SOURCE_DIR}/../../include
+     PATTERN *.txt EXCLUDE
+     PATTERN *.h.in EXCLUDE)
 
 # Generate Inline/Config.h in the build/install directories from Inline/Config.h.in in the source
 configure_file(${WAVM_SOURCE_DIR}/Include/WAVM/Inline/Config.h.in
 			   ${PROJECT_BINARY_DIR}/Include/WAVM/Inline/Config.h)
-install(FILES ${PROJECT_BINARY_DIR}/Include/WAVM/Inline/Config.h
-		DESTINATION include/WAVM/Inline)
+file(INSTALL ${PROJECT_BINARY_DIR}/Include/WAVM/Inline/Config.h
+     DESTINATION ${WAVM_SOURCE_DIR}/../../include/WAVM/Inline)
 
 
 # A function that sets compile options that are common to all WAVM targets.
@@ -157,7 +157,7 @@ function(WAVM_SET_TARGET_COMPILE_OPTIONS TARGET_NAME)
 		target_link_libraries(${TARGET_NAME} PRIVATE "-ignore:4199") # /DELAYLOAD:... ignored; no imports found from ...
 
 	elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	
+
 		if(WAVM_ENABLE_LTO)
 			target_compile_options(${TARGET_NAME} PRIVATE "-flto")
 			target_link_libraries(${TARGET_NAME} PRIVATE "-flto")
@@ -166,7 +166,7 @@ function(WAVM_SET_TARGET_COMPILE_OPTIONS TARGET_NAME)
 		# Compile with all warnings and fatal warnings
 		target_compile_options(${TARGET_NAME} PRIVATE "-Wall")
 		target_compile_options(${TARGET_NAME} PRIVATE "-Werror")
-	
+
 		# Disable RTTI to allow linking against a build of LLVM that was compiled without it.
 		target_compile_options(${TARGET_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
 
@@ -190,7 +190,7 @@ function(WAVM_SET_TARGET_COMPILE_OPTIONS TARGET_NAME)
 			target_compile_options(${TARGET_NAME} PRIVATE "-fsanitize=thread")
 			target_link_libraries(${TARGET_NAME} PUBLIC -fsanitize=thread)
 		endif()
-		
+
 		# Optionally enable Clang's libfuzzer.
 		if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND WAVM_ENABLE_LIBFUZZER)
 			target_compile_options(${TARGET_NAME} PRIVATE "-fsanitize=fuzzer")
@@ -259,9 +259,9 @@ function(WAVM_ADD_LIB_COMPONENT COMPONENT_NAME)
 	endforeach()
 	foreach(COMPONENT_NONCOMPILED_SOURCE ${COMPONENT_NONCOMPILED_SOURCES})
 		get_filename_component(COMPONENT_NONCOMPILED_SOURCE_ABSOLUTE ${COMPONENT_NONCOMPILED_SOURCE} ABSOLUTE)
-		list(APPEND COMPONENT_NONCOMPILED_SOURCES_ABSOLUTE ${COMPONENT_NONCOMPILED_SOURCE_ABSOLUTE})			
+		list(APPEND COMPONENT_NONCOMPILED_SOURCES_ABSOLUTE ${COMPONENT_NONCOMPILED_SOURCE_ABSOLUTE})
 	endforeach()
-	
+
 	# Directly add the component's source files to the monolithic WAVM library.
 	target_sources(WAVM PRIVATE ${COMPONENT_SOURCES_ABSOLUTE} ${CMAKE_CURRENT_LIST_FILE})
 
@@ -275,7 +275,7 @@ function(WAVM_ADD_LIB_COMPONENT COMPONENT_NAME)
 	list(APPEND WAVM_MONOLIB_PUBLIC_LIBS ${COMPONENT_PUBLIC_LIBS})
 	set(WAVM_MONOLIB_PRIVATE_LIBS ${WAVM_MONOLIB_PRIVATE_LIBS} CACHE INTERNAL "" FORCE)
 	set(WAVM_MONOLIB_PUBLIC_LIBS ${WAVM_MONOLIB_PUBLIC_LIBS} CACHE INTERNAL "" FORCE)
-	
+
 	# Add the component's include directories and definitions.
 	target_include_directories(WAVM PRIVATE ${COMPONENT_PRIVATE_INCLUDE_DIRECTORIES})
 	target_compile_definitions(WAVM PRIVATE ${COMPONENT_PRIVATE_DEFINITIONS})
@@ -363,7 +363,7 @@ target_link_libraries(WAVM PUBLIC ${WAVM_MONOLIB_PUBLIC_LIBS})
 target_sources(WAVM PRIVATE ${WAVM_MONOLIB_NONCOMPILED_SOURCE_FILES})
 set_source_files_properties(${WAVM_MONOLIB_NONCOMPILED_SOURCE_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)
 
-set_target_properties(WAVM PROPERTIES 
+set_target_properties(WAVM PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${WAVM_SOURCE_DIR}/../../lib
     ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${WAVM_SOURCE_DIR}/../../lib
     ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO ${WAVM_SOURCE_DIR}/../../lib)

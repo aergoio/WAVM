@@ -30,6 +30,7 @@
 #include "gmp.h"
 
 #define MPZ_MAX_BITS                128
+#define ERR_DESC_MAX_LEN            512
 
 using namespace WAVM;
 using namespace WAVM::IR;
@@ -80,8 +81,6 @@ DEFINE_INTRINSIC_GLOBAL(system, "HEAP_PTR", U32, HEAP_PTR,
 
 static thread_local Memory* asclMemory = nullptr;
 
-static Runtime::ExceptionType* outOfBoundsArrayAccess = nullptr;
-
 static bool resizeHeap(U32 desiredNumBytes)
 {
 	const Uptr desiredNumPages
@@ -127,13 +126,32 @@ static U32 heapAlloc(U32 numBytes)
 	return allocationAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__assert", void, _assert, I32 condition, U32 condStringAddress,
+static void throwFormattedException(const char* format, ...)
+{
+    va_list vargs;
+    U32 messageAddress = heapAlloc(ERR_DESC_MAX_LEN);
+    U8* message = getMemoryBaseAddress(asclMemory) + messageAddress;
+
+    va_start(vargs, format);
+    vsnprintf((char *)message, ERR_DESC_MAX_LEN, format, vargs);
+    va_end(vargs);
+
+    throwException(ExceptionTypes::abortedExecution, {asObject(asclMemory), U32(messageAddress)});
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__assert", void, _assert, I32 condition, U32 condAddress,
                           U32 descAddress)
 {
+    wavmAssert(asclMemory);
+
     if (!condition) {
-		wavmAssert(asclMemory);
-        throwException(ExceptionTypes::failedAssertion,
-                       {asObject(asclMemory), U32(condStringAddress), U32(descAddress)});
+        if (descAddress > 0)
+            throwFormattedException("assertion failed with condition '%s': %s",
+                                    (char *)&memoryRef<U8>(asclMemory, condAddress),
+                                    (char *)&memoryRef<U8>(asclMemory, descAddress));
+        else
+            throwFormattedException("assertion failed with condition '%s'",
+                                    (char *)&memoryRef<U8>(asclMemory, condAddress));
     }
 }
 
@@ -504,7 +522,7 @@ template<typename T> static U32 array_get(U32 arrayAddress, U32 index)
     U32 elemCount = arrayPointer[1];
 
     if (index >= elemCount)
-        throwException(outOfBoundsArrayAccess, {U32(index), U32(elemCount)});
+        throwFormattedException("array index out of bounds");
 
     if (dimension == 1)
         return arrayAddress + sizeof(U64) + index * sizeof(T);
@@ -592,11 +610,6 @@ ASCL::Instance* ASCL::instantiate(Compartment* compartment, const IR::Module& mo
 	asclMemory = instance->asclMemory;
 
     mp_set_memory_functions(mpzAlloc, mpzRealloc, mpzFree);
-
-    outOfBoundsArrayAccess = Runtime::createExceptionType(
-        compartment,
-        IR::ExceptionType{IR::TypeTuple({ValueType::i32, ValueType::i32})},
-        "outOfBoundsArrayAccess");
 
 	return instance;
 }

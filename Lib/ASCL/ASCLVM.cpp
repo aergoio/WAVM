@@ -131,11 +131,11 @@ static bool loadModule(const char* filename, IR::Module& outModule)
 	// If the file starts with the WASM binary magic number, load it as a binary irModule.
 	static const U8 wasmMagicNumber[4] = {0x00, 0x61, 0x73, 0x6d};
 	if(fileBytes.size() < 4 || memcmp(fileBytes.data(), wasmMagicNumber, 4))
-	{ 
+	{
         Errors::fatalf("Invalid WebAssembly binary format");
         return false;
     }
-    return WASM::loadBinaryModule(fileBytes.data(), fileBytes.size(), outModule); 
+    return WASM::loadBinaryModule(fileBytes.data(), fileBytes.size(), outModule);
 }
 
 struct CommandLineOptions
@@ -289,7 +289,7 @@ static int run(const CommandLineOptions& options)
 extern "C" {
 #endif
 
-int vm_run(const char* filename, const char* funcname, char** args)
+int asclvm_run(const char* filename, const char* funcname, char** args)
 {
 	CommandLineOptions options;
 
@@ -299,11 +299,42 @@ int vm_run(const char* filename, const char* funcname, char** args)
 
 	int result = EXIT_FAILURE;
 	Runtime::catchRuntimeExceptions([&result, options]() { result = run(options); },
-									[](Runtime::Exception* exception) {
-										// Treat any unhandled exception as a fatal error.
-										Errors::fatalf("Runtime exception: %s",
-													   describeException(exception).c_str());
-									});
+		[](Runtime::Exception* exception) {
+		    // Treat any unhandled exception as a fatal error.
+			Errors::fatalf("Runtime exception: %s", describeException(exception).c_str());
+	});
+	return result;
+}
+
+int asclvm_test(const char* asclFile, const char* asclSource, const char* wasmFile,
+                const char* wasmFunction, void (*err_fn)(ec_t, errlvl_t, src_pos_t*, ...))
+{
+    char *args[1] = { NULL };
+	CommandLineOptions options;
+
+    options.filename = wasmFile;
+    options.functionName = wasmFunction;
+	options.args = args;
+
+	int result = EXIT_FAILURE;
+	Runtime::catchRuntimeExceptions(
+        [&result, options]() { result = run(options); },
+		[asclFile, asclSource, err_fn](Runtime::Exception* exception) {
+            if (err_fn != NULL) {
+                src_pos_t pos = { (char *)asclFile, (char *)asclSource, 1, 1, 0, 1, 1, 0 };
+
+                /* TODO
+                if (exception->type == ExceptionTypes::abortedExecution) {
+                    pos->first_col = exception->arguments[0].u32;
+                    pos->first_offset = exception->arguments[1].u32;
+                }
+                */
+                err_fn(ERROR_RUNTIME, LVL_ERROR, &pos, describeException(exception).c_str());
+            }
+            else {
+                Errors::fatalf("Runtime exception: %s", describeException(exception).c_str());
+            }
+	});
 	return result;
 }
 

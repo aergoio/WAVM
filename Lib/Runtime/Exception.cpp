@@ -192,21 +192,12 @@ std::string Runtime::describeException(const Exception* exception)
 		result += std::to_string(exception->arguments[1].u64);
 		result += "])";
 	}
-    else if(exception->type == ExceptionTypes::failedAssertion)
+    else if(exception->type == ExceptionTypes::abortedExecution)
 	{
 		Memory* memory = asMemoryNullable(exception->arguments[0].object);
         std::string cond(reinterpret_cast<const char*>
             (&memoryRef<U8>(memory, exception->arguments[1].u32)));
-		result += '(';
-        result += cond;
-        if(exception->arguments[2].u32 > 0)
-        {
-            std::string desc(reinterpret_cast<const char*>
-                (&memoryRef<U8>(memory, exception->arguments[2].u32)));
-		    result += ", ";
-            result += desc;
-        }
-		result += ")\n";
+        return cond;
 	}
 	else if(exception->type->sig.params.size())
 	{
