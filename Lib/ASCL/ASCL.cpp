@@ -126,13 +126,13 @@ static U32 heapAlloc(U32 numBytes)
 	return allocationAddress;
 }
 
-static void throwFormattedException(const char* format, U32 line, U32 column, U32 offset, ...)
+static void throwFormattedException(U32 line, U32 column, U32 offset, const char* format, ...)
 {
     va_list vargs;
     U32 messageAddress = heapAlloc(ERR_DESC_MAX_LEN);
     U8* message = getMemoryBaseAddress(asclMemory) + messageAddress;
 
-    va_start(vargs, offset);
+    va_start(vargs, format);
     vsnprintf((char *)message, ERR_DESC_MAX_LEN, format, vargs);
     va_end(vargs);
 
@@ -147,13 +147,13 @@ DEFINE_INTRINSIC_FUNCTION(system, "__assert", void, _assert, I32 condition, U32 
 
     if (!condition) {
         if (descAddress > 0)
-            throwFormattedException("assertion failed with condition '%s': %s",
-                                    line, column, offset,
+            throwFormattedException(line, column, offset,
+                                    "assertion failed with condition '%s': %s",
                                     (char *)&memoryRef<U8>(asclMemory, condAddress),
                                     (char *)&memoryRef<U8>(asclMemory, descAddress));
         else
-            throwFormattedException("assertion failed with condition '%s'",
-                                    line, column, offset,
+            throwFormattedException(line, column, offset,
+                                    "assertion failed with condition '%s'",
                                     (char *)&memoryRef<U8>(asclMemory, condAddress));
     }
 }
@@ -208,6 +208,9 @@ DEFINE_INTRINSIC_FUNCTION(system, "__atoi32", I32, _atoi32, U32 stringAddress)
 {
     wavmAssert(asclMemory);
 
+    if (stringAddress == 0)
+        return 0;
+
     U8* stringPointer = &memoryRef<U8>(asclMemory, stringAddress);
     I32 ival;
 
@@ -219,6 +222,9 @@ DEFINE_INTRINSIC_FUNCTION(system, "__atoi32", I32, _atoi32, U32 stringAddress)
 DEFINE_INTRINSIC_FUNCTION(system, "__atoi64", I64, _atoi64, U32 stringAddress)
 {
     wavmAssert(asclMemory);
+
+    if (stringAddress == 0)
+        return 0;
 
     U8* stringPointer = &memoryRef<U8>(asclMemory, stringAddress);
     I64 intValue;
@@ -290,6 +296,9 @@ DEFINE_INTRINSIC_FUNCTION(system, "__lower", U32, _lower, U32 stringAddress)
 {
     wavmAssert(asclMemory);
 
+    if (stringAddress == 0)
+        return 0;
+
     U8* stringPointer = &memoryRef<U8>(asclMemory, stringAddress);
     auto stringSize = strlen((const char*)stringPointer);
 
@@ -307,6 +316,9 @@ DEFINE_INTRINSIC_FUNCTION(system, "__lower", U32, _lower, U32 stringAddress)
 DEFINE_INTRINSIC_FUNCTION(system, "__upper", U32, _upper, U32 stringAddress)
 {
     wavmAssert(asclMemory);
+
+    if (stringAddress == 0)
+        return 0;
 
     U8* stringPointer = &memoryRef<U8>(asclMemory, stringAddress);
     auto stringSize = strlen((const char*)stringPointer);
@@ -353,6 +365,7 @@ static void mpzFree(void* ptr, size_t size)
 static I64 mpz_get_i(U32 mpzAddress)
 {
     wavmAssert(asclMemory);
+    errorUnless(mpzAddress > 0);
 
     mpz_ptr mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress);
 
@@ -372,6 +385,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_get_i64", I64, _mpz_get_i64, U32 mpzAdd
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_get_str", U32, _mpz_get_str, U32 mpzAddress)
 {
     wavmAssert(asclMemory);
+    errorUnless(mpzAddress > 0);
 
 	MutableGlobals& mutableGlobals = memoryRef<MutableGlobals>(asclMemory, MutableGlobals::address);
 	const U32 allocationAddress = mutableGlobals.HEAP_PTR;
@@ -418,6 +432,9 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_set_str", U32, _mpz_set_str, U32 valueA
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_add", U32, _mpz_add, U32 mpzAddress1, U32 mpzAddress2)
 {
+    errorUnless(mpzAddress1 > 0);
+    errorUnless(mpzAddress2 > 0);
+
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
     U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
@@ -431,6 +448,9 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_add", U32, _mpz_add, U32 mpzAddress1, U
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_sub", U32, _mpz_sub, U32 mpzAddress1, U32 mpzAddress2)
 {
+    errorUnless(mpzAddress1 > 0);
+    errorUnless(mpzAddress2 > 0);
+
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
     U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
@@ -444,6 +464,9 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_sub", U32, _mpz_sub, U32 mpzAddress1, U
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_mul", U32, _mpz_mul, U32 mpzAddress1, U32 mpzAddress2)
 {
+    errorUnless(mpzAddress1 > 0);
+    errorUnless(mpzAddress2 > 0);
+
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
     U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
@@ -457,6 +480,9 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_mul", U32, _mpz_mul, U32 mpzAddress1, U
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_div", U32, _mpz_div, U32 mpzAddress1, U32 mpzAddress2)
 {
+    errorUnless(mpzAddress1 > 0);
+    errorUnless(mpzAddress2 > 0);
+
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
     U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
@@ -470,6 +496,9 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_div", U32, _mpz_div, U32 mpzAddress1, U
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_mod", U32, _mpz_mod, U32 mpzAddress1, U32 mpzAddress2)
 {
+    errorUnless(mpzAddress1 > 0);
+    errorUnless(mpzAddress2 > 0);
+
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
     U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
@@ -483,6 +512,9 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_mod", U32, _mpz_mod, U32 mpzAddress1, U
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_and", U32, _mpz_and, U32 mpzAddress1, U32 mpzAddress2)
 {
+    errorUnless(mpzAddress1 > 0);
+    errorUnless(mpzAddress2 > 0);
+
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
     U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
@@ -496,6 +528,9 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_and", U32, _mpz_and, U32 mpzAddress1, U
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_or", U32, _mpz_or, U32 mpzAddress1, U32 mpzAddress2)
 {
+    errorUnless(mpzAddress1 > 0);
+    errorUnless(mpzAddress2 > 0);
+
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
     U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
@@ -509,6 +544,9 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_or", U32, _mpz_or, U32 mpzAddress1, U32
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_xor", U32, _mpz_xor, U32 mpzAddress1, U32 mpzAddress2)
 {
+    errorUnless(mpzAddress1 > 0);
+    errorUnless(mpzAddress2 > 0);
+
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
     U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
@@ -523,6 +561,9 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_xor", U32, _mpz_xor, U32 mpzAddress1, U
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_rshift", U32, _mpz_rshift,
                           U32 mpzAddress1, U32 mpzAddress2)
 {
+    errorUnless(mpzAddress1 > 0);
+    errorUnless(mpzAddress2 > 0);
+
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
     U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
@@ -537,6 +578,9 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_rshift", U32, _mpz_rshift,
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_lshift", U32, _mpz_lshift,
                           U32 mpzAddress1, U32 mpzAddress2)
 {
+    errorUnless(mpzAddress1 > 0);
+    errorUnless(mpzAddress2 > 0);
+
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
     U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
@@ -550,6 +594,9 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_lshift", U32, _mpz_lshift,
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_cmp", U32, _mpz_cmp, U32 mpzAddress1, U32 mpzAddress2)
 {
+    errorUnless(mpzAddress1 > 0);
+    errorUnless(mpzAddress2 > 0);
+
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
 
@@ -558,6 +605,8 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_cmp", U32, _mpz_cmp, U32 mpzAddress1, U
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_neg", U32, _mpz_neg, U32 mpzAddress)
 {
+    errorUnless(mpzAddress > 0);
+
     mpz_ptr mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress);
     U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
     mpz_ptr r_mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + resAddress);
@@ -569,12 +618,15 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_neg", U32, _mpz_neg, U32 mpzAddress)
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_sign", I32, _mpz_sign, U32 mpzAddress)
 {
+    errorUnless(mpzAddress > 0);
+
     return mpz_sgn((mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress));
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_abs", U32, _mpz_abs, U32 mpzAddress)
 {
     wavmAssert(asclMemory);
+    errorUnless(mpzAddress > 0);
 
     mpz_ptr mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress);
     U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
@@ -588,6 +640,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_abs", U32, _mpz_abs, U32 mpzAddress)
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_pow", U32, _mpz_pow, U32 mpzAddress, I32 exponent)
 {
     wavmAssert(asclMemory);
+    errorUnless(mpzAddress > 0);
 
     mpz_ptr mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress);
     U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
@@ -602,13 +655,16 @@ template<typename T> static U32 array_get(U32 arrayAddress, U32 index)
 {
     wavmAssert(asclMemory);
 
+    if (arrayAddress == 0)
+        throwFormattedException(1, 1, 0, "uninitialized array");
+
     U32* arrayPointer = &memoryRef<U32>(asclMemory, arrayAddress);
 
     U32 dimension = arrayPointer[0];
     U32 elemCount = arrayPointer[1];
 
     if (index >= elemCount)
-        throwFormattedException("array index out of bounds", 1, 1, 0);
+        throwFormattedException(1, 1, 0, "array index out of bounds");
 
     if (dimension == 1)
         return arrayAddress + sizeof(U64) + index * sizeof(T);
