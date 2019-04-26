@@ -211,6 +211,7 @@ std::string Runtime::describeException(const Exception* exception)
 		}
 		result += ')';
 	}
+    /*
 	std::vector<std::string> callStackDescription = describeCallStack(exception->callStack);
 	result += "\nCall stack:\n";
 	for(auto calledFunction : callStackDescription)
@@ -219,6 +220,7 @@ std::string Runtime::describeException(const Exception* exception)
 		result += calledFunction.c_str();
 		result += '\n';
 	}
+    */
 	return result;
 }
 
