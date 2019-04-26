@@ -256,6 +256,72 @@ DEFINE_INTRINSIC_FUNCTION(system, "__itoa64", U32, _itoa64, I64 intValue)
     return destAddress;
 }
 
+DEFINE_INTRINSIC_FUNCTION(system, "__abs32", I32, _abs32, I32 value)
+{
+    return value >= 0 ? value : -value;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__abs64", I64, _abs64, I64 value)
+{
+    return value >= 0 ? value : -value;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__pow32", I32, _pow32, I32 base, I32 exponent)
+{
+    return pow(base, exponent);
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__pow64", I64, _pow64, I64 base, I32 exponent)
+{
+    return pow(base, exponent);
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__sign32", I32, _sign32, I32 value)
+{
+    return value > 0 ? 1 : (value < 0 ? -1 : 0);
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__sign64", I64, _sign64, I64 value)
+{
+    return value > 0 ? 1 : (value < 0 ? -1 : 0);
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__lower", U32, _lower, U32 stringAddress)
+{
+    wavmAssert(asclMemory);
+
+    U8* stringPointer = &memoryRef<U8>(asclMemory, stringAddress);
+    auto stringSize = strlen((const char*)stringPointer);
+
+    U32 destAddress = coerce32bitAddress(asclMemory, heapAlloc(stringSize + 1));
+    U8* destMemory = getMemoryBaseAddress(asclMemory) + destAddress;
+
+    for (U32 i = 0; i < stringSize; i++) {
+        destMemory[i] = tolower(stringPointer[i]);
+    }
+    destMemory[stringSize] = '\0';
+
+    return destAddress;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__upper", U32, _upper, U32 stringAddress)
+{
+    wavmAssert(asclMemory);
+
+    U8* stringPointer = &memoryRef<U8>(asclMemory, stringAddress);
+    auto stringSize = strlen((const char*)stringPointer);
+
+    U32 destAddress = coerce32bitAddress(asclMemory, heapAlloc(stringSize + 1));
+    U8* destMemory = getMemoryBaseAddress(asclMemory) + destAddress;
+
+    for (U32 i = 0; i < stringSize; i++) {
+        destMemory[i] = toupper(stringPointer[i]);
+    }
+    destMemory[stringSize] = '\0';
+
+    return destAddress;
+}
+
 DEFINE_INTRINSIC_FUNCTION(system, "__print", void, _print, U32 formatAddress, I32 argList)
 {
     wavmAssert(asclMemory);
@@ -350,8 +416,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_set_str", U32, _mpz_set_str, U32 valueA
     return mpzAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__mpz_add", U32, _mpz_add,
-                          U32 mpzAddress1, U32 mpzAddress2)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_add", U32, _mpz_add, U32 mpzAddress1, U32 mpzAddress2)
 {
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
@@ -364,8 +429,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_add", U32, _mpz_add,
     return resAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__mpz_sub", U32, _mpz_sub,
-                          U32 mpzAddress1, U32 mpzAddress2)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_sub", U32, _mpz_sub, U32 mpzAddress1, U32 mpzAddress2)
 {
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
@@ -378,8 +442,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_sub", U32, _mpz_sub,
     return resAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__mpz_mul", U32, _mpz_mul,
-                          U32 mpzAddress1, U32 mpzAddress2)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_mul", U32, _mpz_mul, U32 mpzAddress1, U32 mpzAddress2)
 {
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
@@ -392,8 +455,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_mul", U32, _mpz_mul,
     return resAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__mpz_div", U32, _mpz_div,
-                          U32 mpzAddress1, U32 mpzAddress2)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_div", U32, _mpz_div, U32 mpzAddress1, U32 mpzAddress2)
 {
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
@@ -406,8 +468,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_div", U32, _mpz_div,
     return resAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__mpz_mod", U32, _mpz_mod,
-                          U32 mpzAddress1, U32 mpzAddress2)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_mod", U32, _mpz_mod, U32 mpzAddress1, U32 mpzAddress2)
 {
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
@@ -420,8 +481,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_mod", U32, _mpz_mod,
     return resAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__mpz_and", U32, _mpz_and,
-                          U32 mpzAddress1, U32 mpzAddress2)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_and", U32, _mpz_and, U32 mpzAddress1, U32 mpzAddress2)
 {
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
@@ -434,8 +494,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_and", U32, _mpz_and,
     return resAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__mpz_or", U32, _mpz_or,
-                          U32 mpzAddress1, U32 mpzAddress2)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_or", U32, _mpz_or, U32 mpzAddress1, U32 mpzAddress2)
 {
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
@@ -448,8 +507,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_or", U32, _mpz_or,
     return resAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__mpz_xor", U32, _mpz_xor,
-                          U32 mpzAddress1, U32 mpzAddress2)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_xor", U32, _mpz_xor, U32 mpzAddress1, U32 mpzAddress2)
 {
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
@@ -490,8 +548,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_lshift", U32, _mpz_lshift,
     return resAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__mpz_cmp", U32, _mpz_cmp,
-                          U32 mpzAddress1, U32 mpzAddress2)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_cmp", U32, _mpz_cmp, U32 mpzAddress1, U32 mpzAddress2)
 {
     mpz_ptr mpz1 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress1);
     mpz_ptr mpz2 = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress2);
@@ -513,6 +570,32 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_neg", U32, _mpz_neg, U32 mpzAddress)
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_sign", I32, _mpz_sign, U32 mpzAddress)
 {
     return mpz_sgn((mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress));
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_abs", U32, _mpz_abs, U32 mpzAddress)
+{
+    wavmAssert(asclMemory);
+
+    mpz_ptr mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress);
+    U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
+    mpz_ptr r_mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + resAddress);
+
+    mpz_abs(r_mpz, mpz);
+
+    return resAddress;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_pow", U32, _mpz_pow, U32 mpzAddress, I32 exponent)
+{
+    wavmAssert(asclMemory);
+
+    mpz_ptr mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress);
+    U32 resAddress = coerce32bitAddress(asclMemory, heapAlloc(sizeof(mpz_t)));
+    mpz_ptr r_mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + resAddress);
+
+    mpz_pow_ui(r_mpz, mpz, exponent);
+
+    return resAddress;
 }
 
 template<typename T> static U32 array_get(U32 arrayAddress, U32 index)
