@@ -651,42 +651,37 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_pow", U32, _mpz_pow, U32 mpzAddress, I3
     return resAddress;
 }
 
-template<typename T> static U32 array_get(U32 arrayAddress, U32 index)
+template<typename T> static U32 array_get(U32 arrayAddress, I32 dimension, U32 index)
 {
     wavmAssert(asclMemory);
 
     if (arrayAddress == 0)
         throwFormattedException(1, 1, 0, "uninitialized array");
 
-    U32* arrayPointer = &memoryRef<U32>(asclMemory, arrayAddress);
+    T* arrayPointer = &memoryRef<T>(asclMemory, arrayAddress);
 
-    U32 dimension = arrayPointer[0];
-    U32 elemCount = arrayPointer[1];
-
-    if (index >= elemCount)
+    if (index >= arrayPointer[0])
         throwFormattedException(1, 1, 0, "array index out of bounds");
 
-    if (dimension == 1)
-        return arrayAddress + sizeof(U64) + index * sizeof(T);
+    U32 unitSize;
+    if (dimension == 0)
+        unitSize = sizeof(T);
+    else
+        unitSize = (dimension + arrayPointer[dimension]) * sizeof(T);
 
-    U32 unitSize = 0;
-    for (U32 i = dimension, j = 2; i > 1; i--, j += 2) {
-        unitSize += sizeof(U64) + arrayPointer[j + 1] * sizeof(T);
-    }
-
-    return arrayAddress + sizeof(U64) + (unitSize * index);
+    return arrayAddress + sizeof(T) + (unitSize * index);
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__array_get_i32", U32, _array_get_i32,
-                          U32 arrayAddress, U32 index)
+                          U32 arrayAddress, I32 dimension, U32 index)
 {
-    return array_get<U32>(arrayAddress, index);
+    return array_get<U32>(arrayAddress, dimension, index);
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__array_get_i64", U32, _array_get_i64,
-                          U32 arrayAddress, U32 index)
+                          U32 arrayAddress, I32 dimension, U32 index)
 {
-    return array_get<U64>(arrayAddress, index);
+    return array_get<U64>(arrayAddress, dimension, index);
 }
 
 enum class ioStreamVMHandle
