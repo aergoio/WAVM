@@ -108,8 +108,7 @@ static bool resizeHeap(U32 desiredNumBytes)
 
 static U32 heapAlloc(U32 numBytes)
 {
-	MutableGlobals& mutableGlobals
-		= memoryRef<MutableGlobals>(asclMemory, MutableGlobals::address);
+	MutableGlobals& mutableGlobals = memoryRef<MutableGlobals>(asclMemory, MutableGlobals::address);
 
 	const U32 allocationAddress = mutableGlobals.HEAP_PTR;
 	const U32 endAddress = (allocationAddress + numBytes + 15) & -16;
@@ -140,6 +139,28 @@ static void throwFormattedException(U32 line, U32 column, U32 offset, const char
                    {asObject(asclMemory), messageAddress, line, column, offset});
 }
 
+DEFINE_INTRINSIC_FUNCTION(system, "__malloc", U32, _malloc, U32 numBytes)
+{
+    wavmAssert(asclMemory);
+    return coerce32bitAddress(asclMemory, heapAlloc(numBytes));
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__memcpy", void, _memcpy,
+                          U32 destAddress, U32 srcAddress, U32 numBytes)
+{
+    wavmAssert(asclMemory);
+
+    U8* srcMemory = getMemoryBaseAddress(asclMemory) + srcAddress;
+    U8* destMemory = getMemoryBaseAddress(asclMemory) + destAddress;
+
+    memcpy(destMemory, srcMemory, numBytes);
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__stack_overflow", void, _stack_overflow)
+{
+    throwFormattedException(1, 1, 0, "stack overflow");
+}
+
 DEFINE_INTRINSIC_FUNCTION(system, "__assert", void, _assert, I32 condition, U32 condAddress,
                           U32 descAddress, U32 line, U32 column, U32 offset)
 {
@@ -156,23 +177,6 @@ DEFINE_INTRINSIC_FUNCTION(system, "__assert", void, _assert, I32 condition, U32 
                                     "assertion failed with condition '%s'",
                                     (char *)&memoryRef<U8>(asclMemory, condAddress));
     }
-}
-
-DEFINE_INTRINSIC_FUNCTION(system, "__malloc", U32, _malloc, U32 numBytes)
-{
-    wavmAssert(asclMemory);
-    return coerce32bitAddress(asclMemory, heapAlloc(numBytes));
-}
-
-DEFINE_INTRINSIC_FUNCTION(system, "__memcpy", void, _memcpy,
-                          U32 destAddress, U32 srcAddress, U32 numBytes)
-{
-    wavmAssert(asclMemory);
-
-    U8* srcMemory = getMemoryBaseAddress(asclMemory) + srcAddress;
-    U8* destMemory = getMemoryBaseAddress(asclMemory) + destAddress;
-
-    memcpy(destMemory, srcMemory, numBytes);
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__strcmp", U32, _strcmp, U32 stringAddress1, U32 stringAddress2)
