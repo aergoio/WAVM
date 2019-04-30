@@ -179,6 +179,15 @@ DEFINE_INTRINSIC_FUNCTION(system, "__assert", void, _assert, I32 condition, U32 
     }
 }
 
+DEFINE_INTRINSIC_FUNCTION(system, "__strlen", U32, _strlen, U32 stringAddress)
+{
+    wavmAssert(asclMemory);
+
+    U8* stringPointer = &memoryRef<U8>(asclMemory, stringAddress);
+
+    return strlen((const char*)stringPointer);
+}
+
 DEFINE_INTRINSIC_FUNCTION(system, "__strcmp", U32, _strcmp, U32 stringAddress1, U32 stringAddress2)
 {
     wavmAssert(asclMemory);
@@ -262,6 +271,19 @@ DEFINE_INTRINSIC_FUNCTION(system, "__itoa64", U32, _itoa64, I64 intValue)
     U8* destMemory = getMemoryBaseAddress(asclMemory) + destAddress;
 
     memcpy(destMemory, strValue, strlen(strValue) + 1);
+
+    return destAddress;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__ctoa", U32, _ctoa, U32 charValue)
+{
+    wavmAssert(asclMemory);
+
+    U32 destAddress = coerce32bitAddress(asclMemory, heapAlloc(2));
+    U8* destMemory = getMemoryBaseAddress(asclMemory) + destAddress;
+
+    destMemory[0] = (U8)charValue;
+    destMemory[1] = '\0';
 
     return destAddress;
 }
@@ -665,7 +687,7 @@ template<typename T> static U32 array_get(U32 arrayAddress, I32 dimension, U32 i
     T* arrayPointer = &memoryRef<T>(asclMemory, arrayAddress);
 
     if (index >= arrayPointer[0])
-        throwFormattedException(1, 1, 0, "array index out of bounds");
+        throwFormattedException(1, 1, 0, "index out of bounds: %d", index);
 
     U32 unitSize;
     if (dimension == 0)
@@ -686,6 +708,27 @@ DEFINE_INTRINSIC_FUNCTION(system, "__array_get_i64", U32, _array_get_i64,
                           U32 arrayAddress, I32 dimension, U32 index)
 {
     return array_get<U64>(arrayAddress, dimension, index);
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__char_get", U32, _char_get, U32 stringAddress, U32 index)
+{
+    U8* stringPointer = &memoryRef<U8>(asclMemory, stringAddress);
+
+    if (index >= strlen((const char*)stringPointer))
+        throwFormattedException(1, 1, 0, "index out of bounds: %d", index);
+
+    return stringPointer[index];
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__char_set", void, _char_set,
+                          U32 stringAddress, U32 index, U32 character)
+{
+    U8* stringPointer = &memoryRef<U8>(asclMemory, stringAddress);
+
+    if (index >= strlen((const char*)stringPointer))
+        throwFormattedException(1, 1, 0, "index out of bounds: %d", index);
+
+    stringPointer[index] = character;
 }
 
 enum class ioStreamVMHandle
