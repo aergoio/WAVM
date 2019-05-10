@@ -185,6 +185,14 @@ DEFINE_INTRINSIC_FUNCTION(system, "__memcpy", void, _memcpy,
     memcpy(destMemory, srcMemory, numBytes);
 }
 
+DEFINE_INTRINSIC_FUNCTION(system, "__memset", void, _memset,
+                          U32 destAddress, I32 byte, U32 numBytes)
+{
+    U8* destMemory = getMemoryBaseAddress(asclMemory) + destAddress;
+
+    memset(destMemory, byte, numBytes);
+}
+
 DEFINE_INTRINSIC_FUNCTION(system, "__stack_overflow", void, _stack_overflow)
 {
     throwFormattedException(1, 1, 0, "stack overflow");
@@ -238,6 +246,29 @@ DEFINE_INTRINSIC_FUNCTION(system, "__strcat", U32, _strcat, U32 stringAddress1, 
     return destAddress;
 }
 
+DEFINE_INTRINSIC_FUNCTION(system, "__strdup", U32, _strdup, U32 stringAddress)
+{
+    U8* stringPointer = &memoryRef<U8>(asclMemory, stringAddress);
+    auto stringSize = strlen((const char*)stringPointer);
+
+    U32 destAddress = heapAlloc(stringSize + 1);
+    U8* destMemory = getMemoryBaseAddress(asclMemory) + destAddress;
+
+    memcpy(destMemory, stringPointer, stringSize);
+
+    return destAddress;
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__strcpy", void, _strcpy, U32 destAddress, U32 stringAddress)
+{
+    checkNull(destAddress);
+
+    U8* destMemory = &memoryRef<U8>(asclMemory, destAddress);
+    U8* stringPointer = &memoryRef<U8>(asclMemory, stringAddress);
+
+    strcpy((char*)destMemory, (char*)stringPointer);
+}
+
 DEFINE_INTRINSIC_FUNCTION(system, "__atoi32", I32, _atoi32, U32 stringAddress)
 {
     if (stringAddress == 0)
@@ -268,10 +299,10 @@ DEFINE_INTRINSIC_FUNCTION(system, "__itoa32", U32, _itoa32, I32 intValue)
 {
     const char *strValue = std::to_string(intValue).c_str();
 
-    U32 destAddress = heapAlloc(strlen(strValue));
+    U32 destAddress = heapAlloc(strlen(strValue) + 1);
     U8* destMemory = getMemoryBaseAddress(asclMemory) + destAddress;
 
-    memcpy(destMemory, strValue, strlen(strValue) + 1);
+    memcpy(destMemory, strValue, strlen(strValue));
 
     return destAddress;
 }
@@ -280,10 +311,10 @@ DEFINE_INTRINSIC_FUNCTION(system, "__itoa64", U32, _itoa64, I64 intValue)
 {
     const char *strValue = std::to_string(intValue).c_str();
 
-    U32 destAddress = heapAlloc(strlen(strValue));
+    U32 destAddress = heapAlloc(strlen(strValue) + 1);
     U8* destMemory = getMemoryBaseAddress(asclMemory) + destAddress;
 
-    memcpy(destMemory, strValue, strlen(strValue) + 1);
+    memcpy(destMemory, strValue, strlen(strValue));
 
     return destAddress;
 }
@@ -676,7 +707,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_pow", U32, _mpz_pow, U32 mpzAddress, I3
     return resAddress;
 }
 
-template<typename T> static U32 array_get(U32 arrayAddress, I32 dimension, U32 index)
+template<typename T> static U32 array_get(U32 arrayAddress, U32 dimension, U32 index, U32 typeSize)
 {
     checkNull(arrayAddress);
 
@@ -687,23 +718,23 @@ template<typename T> static U32 array_get(U32 arrayAddress, I32 dimension, U32 i
 
     U32 unitSize;
     if (dimension == 0)
-        unitSize = sizeof(T);
+        unitSize = typeSize;
     else
-        unitSize = (dimension + arrayPointer[dimension]) * sizeof(T);
+        unitSize = dimension * sizeof(T) + arrayPointer[dimension] * typeSize;
 
     return arrayAddress + sizeof(T) + (unitSize * index);
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__array_get_i32", U32, _array_get_i32,
-                          U32 arrayAddress, I32 dimension, U32 index)
+                          U32 arrayAddress, U32 dimension, U32 index, U32 typeSize)
 {
-    return array_get<U32>(arrayAddress, dimension, index);
+    return array_get<U32>(arrayAddress, dimension, index, typeSize);
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__array_get_i64", U32, _array_get_i64,
-                          U32 arrayAddress, I32 dimension, U32 index)
+                          U32 arrayAddress, U32 dimension, U32 index, U32 typeSize)
 {
-    return array_get<U64>(arrayAddress, dimension, index);
+    return array_get<U64>(arrayAddress, dimension, index, typeSize);
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__char_get", U32, _char_get, U32 stringAddress, U32 index)
