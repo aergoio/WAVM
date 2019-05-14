@@ -38,39 +38,9 @@ using namespace WAVM::Runtime;
 
 DEFINE_INTRINSIC_MODULE(system)
 
-//  0..62  = static data
-// 63..63  = MutableGlobals
-// 64..127 = aliased stack
-// 128..   = dynamic memory
-enum
-{
-	minStaticASCLMemoryPages = 128
-};
-
-struct MutableGlobals
-{
-	enum
-	{
-		address = 63 * IR::numBytesPerPage
-	};
-
-	U32 HEAP_PTR;
-	I32 _stderr;
-	I32 _stdin;
-	I32 _stdout;
-};
-
-DEFINE_INTRINSIC_GLOBAL(system, "STACK_MAX", I32, STACK_MAX, 127 * IR::numBytesPerPage);
-
-DEFINE_INTRINSIC_GLOBAL(system, "_stderr", I32, _stderr,
-						MutableGlobals::address + offsetof(MutableGlobals, _stderr));
-DEFINE_INTRINSIC_GLOBAL(system, "_stdin", I32, _stdin,
-						MutableGlobals::address + offsetof(MutableGlobals, _stdin));
-DEFINE_INTRINSIC_GLOBAL(system, "_stdout", I32, _stdout,
-						MutableGlobals::address + offsetof(MutableGlobals, _stdout));
-
-DEFINE_INTRINSIC_GLOBAL(system, "HEAP_PTR", U32, HEAP_PTR,
-						MutableGlobals::address + offsetof(MutableGlobals, HEAP_PTR))
+U32 STACK_MAX = 0;
+U32 STACK_TOP = 0;
+U32 HEAP_ADDR = 0;
 
 static thread_local Memory* asclMemory = nullptr;
 
@@ -114,12 +84,10 @@ static void checkHeapAddress(U32 allocationAddress, U32 endAddress)
 
 static U32 heapAlloc(U32 numBytes)
 {
-	MutableGlobals& mutableGlobals = memoryRef<MutableGlobals>(asclMemory, MutableGlobals::address);
-
-	const U32 allocationAddress = mutableGlobals.HEAP_PTR;
+	const U32 allocationAddress = HEAP_ADDR;
 	const U32 endAddress = allocationAddress + numBytes;
 
-	mutableGlobals.HEAP_PTR = endAddress;
+	HEAP_ADDR = endAddress;
 
     checkHeapAddress(allocationAddress, endAddress);
 
@@ -134,12 +102,10 @@ static U32 heapAllocAligned(U32 numBytes, U8 align)
 {
     errorUnless(align > 0);
 
-	MutableGlobals& mutableGlobals = memoryRef<MutableGlobals>(asclMemory, MutableGlobals::address);
-
-	const U32 allocationAddress = (mutableGlobals.HEAP_PTR + align - 1) & ~(align - 1);
+	const U32 allocationAddress = (HEAP_ADDR + align - 1) & ~(align - 1);
 	const U32 endAddress = allocationAddress + numBytes;
 
-	mutableGlobals.HEAP_PTR = endAddress;
+	HEAP_ADDR = endAddress;
 
     checkHeapAddress(allocationAddress, endAddress);
 
@@ -449,10 +415,11 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_get_str", U32, _mpz_get_str, U32 mpzAdd
 {
     checkNull(mpzAddress);
 
-	MutableGlobals& mutableGlobals = memoryRef<MutableGlobals>(asclMemory, MutableGlobals::address);
-	const U32 allocationAddress = mutableGlobals.HEAP_PTR;
+	const U32 allocationAddress = HEAP_ADDR;
 
     mpz_get_str(NULL, 10, (mpz_srcptr)(getMemoryBaseAddress(asclMemory) + mpzAddress));
+
+    wavmAssert(HEAP_ADDR > allocationAddress);
 
     return allocationAddress;
 }
@@ -876,19 +843,10 @@ ASCL::Instance* ASCL::instantiate(Compartment* compartment, const IR::Module& mo
 	   && module.memories.imports[0].exportName == "memory")
 	{
 		memoryType = module.memories.imports[0].type;
-		if(memoryType.size.max >= minStaticASCLMemoryPages)
-		{
-			if(memoryType.size.min <= minStaticASCLMemoryPages)
-			{
-				// Enlarge the initial memory to make space for the stack and mutable globals.
-				memoryType.size.min = minStaticASCLMemoryPages;
-			}
-		}
-		else
-		{
+        if(memoryType.size.min < 1) {
 			Log::printf(Log::error, "module's memory is too small for ASCL emulation");
 			return nullptr;
-		}
+        }
 	}
 	else
 	{
@@ -912,23 +870,33 @@ ASCL::Instance* ASCL::instantiate(Compartment* compartment, const IR::Module& mo
 	instance->system = Intrinsics::instantiateModule(
 		compartment, INTRINSIC_MODULE_REF(system), "system", extraEnvExports);
 
-	unwindSignalsAsExceptions([=] {
-		MutableGlobals& mutableGlobals = memoryRef<MutableGlobals>(memory, MutableGlobals::address);
-
-		mutableGlobals.HEAP_PTR = STACK_MAX.getValue().i32;
-		mutableGlobals._stderr = (U32)ioStreamVMHandle::StdErr;
-		mutableGlobals._stdin = (U32)ioStreamVMHandle::StdIn;
-		mutableGlobals._stdout = (U32)ioStreamVMHandle::StdOut;
-	});
-
 	instance->asclMemory = memory;
 
 	asclMemory = instance->asclMemory;
     wavmAssert(asclMemory);
 
-    mp_set_memory_functions(mpzAlloc, mpzRealloc, mpzFree);
-
 	return instance;
+}
+
+void ASCL::initializeGlobals(Context* context,
+                             const IR::Module& module,
+                             ModuleInstance* moduleInstance)
+{
+    auto stackMax = asGlobalNullable(getInstanceExport(moduleInstance, "stack_max"));
+    wavmAssert(stackMax != nullptr);
+
+    STACK_MAX = getGlobalValue(context, stackMax).i32;
+    wavmAssert(STACK_MAX > 0);
+
+    auto stackTop = asGlobalNullable(getInstanceExport(moduleInstance, "stack_top"));
+    wavmAssert(stackTop != nullptr);
+
+    STACK_TOP = getGlobalValue(context, stackTop).i32;
+    wavmAssert(STACK_TOP > 0);
+
+    HEAP_ADDR = STACK_MAX;
+
+    mp_set_memory_functions(mpzAlloc, mpzRealloc, mpzFree);
 }
 
 void ASCL::injectCommandArgs(ASCL::Instance* instance,

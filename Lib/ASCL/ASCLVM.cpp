@@ -193,6 +193,9 @@ static int run(const CommandLineOptions& options)
 	Function* startFunction = getStartFunction(moduleInstance);
 	if(startFunction) { invokeFunctionChecked(context, startFunction, {}); }
 
+    // Call the ASCL global initializers.
+    ASCL::initializeGlobals(context, irModule, moduleInstance);
+
 	// Look up the function export to call.
 	Function* function;
 	if(!options.functionName)
