@@ -38,6 +38,7 @@ using namespace WAVM::Runtime;
 
 DEFINE_INTRINSIC_MODULE(system)
 
+U8* FILENAME = nullptr;
 U32 STACK_MAX = 0;
 U32 STACK_TOP = 0;
 U32 HEAP_ADDR = 0;
@@ -882,13 +883,13 @@ void ASCL::initializeGlobals(Context* context,
                              const IR::Module& module,
                              ModuleInstance* moduleInstance)
 {
-    auto stackMax = asGlobalNullable(getInstanceExport(moduleInstance, "stack_max"));
+    auto stackMax = asGlobalNullable(getInstanceExport(moduleInstance, "__STACK_MAX"));
     wavmAssert(stackMax != nullptr);
 
     STACK_MAX = getGlobalValue(context, stackMax).i32;
     wavmAssert(STACK_MAX > 0);
 
-    auto stackTop = asGlobalNullable(getInstanceExport(moduleInstance, "stack_top"));
+    auto stackTop = asGlobalNullable(getInstanceExport(moduleInstance, "__STACK_TOP"));
     wavmAssert(stackTop != nullptr);
 
     STACK_TOP = getGlobalValue(context, stackTop).i32;
