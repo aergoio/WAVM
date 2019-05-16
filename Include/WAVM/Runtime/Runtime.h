@@ -152,8 +152,6 @@ namespace WAVM { namespace Runtime {
 	visit(abortedExecution,                                                                        \
           WAVM::IR::ValueType::anyref,                                                             \
 		  WAVM::IR::ValueType::i32,                                                                \
-		  WAVM::IR::ValueType::i32,                                                                \
-		  WAVM::IR::ValueType::i32,                                                                \
           WAVM::IR::ValueType::i32);                                                               \
 	visit(invalidArgument);
 

@@ -113,7 +113,7 @@ static U32 heapAllocAligned(U32 numBytes, U8 align)
 	return allocationAddress;
 }
 
-static void throwFormattedException(U32 line, U32 column, U32 offset, const char* format, ...)
+static void throwFormattedException(U32 line, const char* format, ...)
 {
     va_list vargs;
     U32 messageAddress = heapAlloc(ERR_DESC_MAX_LEN);
@@ -124,13 +124,13 @@ static void throwFormattedException(U32 line, U32 column, U32 offset, const char
     va_end(vargs);
 
     throwException(ExceptionTypes::abortedExecution,
-                   {asObject(asclMemory), messageAddress, line, column, offset});
+                   {asObject(asclMemory), messageAddress, line});
 }
 
 static void checkNull(U32 address)
 {
     if (address == 0)
-        throwFormattedException(1, 1, 0, "cannot access uninitialized variable");
+        throwFormattedException(1, "cannot access uninitialized variable");
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__malloc", U32, _malloc, U32 numBytes, U32 align)
@@ -162,21 +162,19 @@ DEFINE_INTRINSIC_FUNCTION(system, "__memset", void, _memset,
 
 DEFINE_INTRINSIC_FUNCTION(system, "__stack_overflow", void, _stack_overflow)
 {
-    throwFormattedException(1, 1, 0, "stack overflow");
+    throwFormattedException(1, "stack overflow");
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__assert", void, _assert, I32 condition, U32 condAddress,
-                          U32 descAddress, U32 line, U32 column, U32 offset)
+                          U32 descAddress, U32 line)
 {
     if (!condition) {
         if (descAddress > 0)
-            throwFormattedException(line, column, offset,
-                                    "assertion failed with condition '%s': %s",
+            throwFormattedException(line, "assertion failed with condition '%s': %s",
                                     (char *)&memoryRef<U8>(asclMemory, condAddress),
                                     (char *)&memoryRef<U8>(asclMemory, descAddress));
         else
-            throwFormattedException(line, column, offset,
-                                    "assertion failed with condition '%s'",
+            throwFormattedException(line, "assertion failed with condition '%s'",
                                     (char *)&memoryRef<U8>(asclMemory, condAddress));
     }
 }
@@ -682,7 +680,7 @@ template<typename T> static U32 array_get(U32 arrayAddress, U32 dimension, U32 i
     T* arrayPointer = &memoryRef<T>(asclMemory, arrayAddress);
 
     if (index >= arrayPointer[0])
-        throwFormattedException(1, 1, 0, "index out of bounds: %d", index);
+        throwFormattedException(1, "index out of bounds: %d", index);
 
     U32 unitSize;
     if (dimension == 0)
@@ -712,7 +710,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__char_get", U32, _char_get, U32 stringAddres
     U8* stringPointer = getMemoryBaseAddress(asclMemory) + stringAddress;
 
     if (index >= strlen((const char*)stringPointer))
-        throwFormattedException(1, 1, 0, "index out of bounds: %d", index);
+        throwFormattedException(1, "index out of bounds: %d", index);
 
     return stringPointer[index];
 }
@@ -725,7 +723,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__char_set", void, _char_set,
     U8* stringPointer = getMemoryBaseAddress(asclMemory) + stringAddress;
 
     if (index >= strlen((const char*)stringPointer))
-        throwFormattedException(1, 1, 0, "index out of bounds: %d", index);
+        throwFormattedException(1, "index out of bounds: %d", index);
 
     stringPointer[index] = character;
 }
@@ -886,16 +884,8 @@ void ASCL::initializeGlobals(Context* context,
     auto stackMax = asGlobalNullable(getInstanceExport(moduleInstance, "__STACK_MAX"));
     wavmAssert(stackMax != nullptr);
 
-    STACK_MAX = getGlobalValue(context, stackMax).i32;
-    wavmAssert(STACK_MAX > 0);
-
-    auto stackTop = asGlobalNullable(getInstanceExport(moduleInstance, "__STACK_TOP"));
-    wavmAssert(stackTop != nullptr);
-
-    STACK_TOP = getGlobalValue(context, stackTop).i32;
-    wavmAssert(STACK_TOP > 0);
-
-    HEAP_ADDR = STACK_MAX;
+    HEAP_ADDR = getGlobalValue(context, stackMax).i32;
+    wavmAssert(HEAP_ADDR > 0);
 
     mp_set_memory_functions(mpzAlloc, mpzRealloc, mpzFree);
 }
