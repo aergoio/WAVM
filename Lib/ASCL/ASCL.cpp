@@ -133,14 +133,14 @@ static void checkNull(U32 address)
         throwFormattedException(1, 1, 0, "cannot access uninitialized variable");
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__malloc32", U32, _malloc32, U32 numBytes)
+DEFINE_INTRINSIC_FUNCTION(system, "__malloc", U32, _malloc, U32 numBytes, U32 align)
 {
-    return heapAlloc32(numBytes);
+    return heapAllocAligned(numBytes, align);
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__malloc64", U32, _malloc64, U32 numBytes)
+DEFINE_INTRINSIC_FUNCTION(system, "__align", U32, _align, U32 address, U32 align)
 {
-    return heapAlloc64(numBytes);
+    return (address + (align - 1)) & ~(align - 1);
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__memcpy", void, _memcpy,
