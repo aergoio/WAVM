@@ -844,6 +844,36 @@ DEFINE_INTRINSIC_FUNCTION(system, "__map_get_i64_i64", I64, _map_get_i64_i64, U3
     return map_get<I64, I64>(mapAddress, key);
 }
 
+template<typename K, typename V> static I32 map_size(U32 mapAddress)
+{
+    checkNull(mapAddress);
+
+    HashMap<K, V>* map =
+        reinterpret_cast<HashMap<K, V>*>(getMemoryBaseAddress(asclMemory) + mapAddress);
+
+    return (*map).size();
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__map_size_i32_i32", I32, _map_size_i32_i32, U32 mapAddress)
+{
+    return map_size<I32, I32>(mapAddress);
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__map_size_i32_i64", I32, _map_size_i32_i64, U32 mapAddress)
+{
+    return map_size<I32, I64>(mapAddress);
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__map_size_i64_i32", I32, _map_size_i64_i32, U32 mapAddress)
+{
+    return map_size<I64, I32>(mapAddress);
+}
+
+DEFINE_INTRINSIC_FUNCTION(system, "__map_size_i64_i64", I32, _map_size_i64_i64, U32 mapAddress)
+{
+    return map_size<I64, I64>(mapAddress);
+}
+
 enum class ioStreamVMHandle
 {
     StdErr = 1,
