@@ -813,7 +813,11 @@ template<typename K, typename V> static V map_get(U32 mapAddress, K key)
     HashMap<K, V>* map =
         reinterpret_cast<HashMap<K, V>*>(getMemoryBaseAddress(asclMemory) + mapAddress);
 
-    return (*map)[key];
+    const V* value = (*map).get(key);
+    if (value == nullptr)
+        throwFormattedException(1, "key not found");
+
+    return *value;
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__map_get_i32_i32", I32, _map_get_i32_i32, U32 mapAddress,
