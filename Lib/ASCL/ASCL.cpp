@@ -414,13 +414,14 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_get_str", U32, _mpz_get_str, U32 mpzAdd
 {
     checkNull(mpzAddress);
 
-	const U32 allocationAddress = HEAP_ADDR;
+    mpz_ptr mpz = (mpz_ptr)(getMemoryBaseAddress(asclMemory) + mpzAddress);
 
-    mpz_get_str(NULL, 10, (mpz_srcptr)(getMemoryBaseAddress(asclMemory) + mpzAddress));
+	const U32 stringAddress = heapAlloc(mpz_sizeinbase(mpz, 10) + 2);
+    U8* stringPointer = &memoryRef<U8>(asclMemory, stringAddress);
 
-    wavmAssert(HEAP_ADDR > allocationAddress);
+    mpz_get_str((char*)stringPointer, 10, mpz);
 
-    return allocationAddress;
+    return stringAddress;
 }
 
 DEFINE_INTRINSIC_FUNCTION(system, "__mpz_set_i32", U32, _mpz_set_i32, I32 value)
