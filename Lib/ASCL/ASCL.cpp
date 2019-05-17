@@ -615,7 +615,7 @@ DEFINE_INTRINSIC_FUNCTION(system, "__mpz_shl", U32, _mpz_shl, U32 mpzAddress1, U
     return resAddress;
 }
 
-DEFINE_INTRINSIC_FUNCTION(system, "__mpz_com", U32, _mpz_com, U32 mpzAddress)
+DEFINE_INTRINSIC_FUNCTION(system, "__mpz_not", U32, _mpz_not, U32 mpzAddress)
 {
     checkNull(mpzAddress);
 
